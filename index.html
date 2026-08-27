@@ -345,6 +345,31 @@
 
     .meta { font-size: 13px; color: var(--muted); line-height: 1.45; }
 
+    .home-card {
+      display: grid;
+      grid-template-columns: 1fr 44px;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .rank {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .rank .mini {
+      flex: 1;
+      padding: 0;
+      min-height: 36px;
+      font-size: 14px;
+    }
+
+    .rank .mini:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
     .home-actions {
       display: flex;
       gap: 8px;
@@ -950,29 +975,60 @@
       document.getElementById("tabEdit").classList.toggle("on", !list);
       document.getElementById("pageTitle").textContent = list ? "Kaydettiğiniz evler" : (els.title.value.trim() || "Yeni ev");
       document.getElementById("pageLead").textContent = list
-        ? "Bir eve dokunun, hesabı açılsın."
+        ? "Oklarla sırayı değiştirin; herkes aynı sırayı görür."
         : "Evin fiyatını gir, masraflar ve taksitler anında çıksın.";
+    };
+
+    const orderedHomes = () => {
+      const homes = [...loadHomes()];
+      homes.sort((a, b) => {
+        const ao = a.order;
+        const bo = b.order;
+        if (ao == null && bo == null) return (b.savedAt || 0) - (a.savedAt || 0);
+        if (ao == null) return 1;
+        if (bo == null) return -1;
+        return ao - bo;
+      });
+      return homes;
+    };
+
+    const setOrder = (homes) => saveHomes(homes.map((h, i) => ({ ...h, order: i })));
+
+    const moveHome = (id, dir) => {
+      const list = orderedHomes();
+      const i = list.findIndex((h) => h.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= list.length) return;
+      [list[i], list[j]] = [list[j], list[i]];
+      setOrder(list);
+      renderList();
     };
 
     const renderList = () => {
       const box = document.getElementById("homeList");
-      const homes = loadHomes().map(figures).sort((a, b) => b.savedAt - a.savedAt);
+      const homes = orderedHomes().map(figures);
       if (!homes.length) {
         box.innerHTML = `<section class="card empty"><b>Henüz ev yok</b>Hesap sekmesinden bir ilan kaydedin.</section>`;
         return;
       }
-      box.innerHTML = homes.map((h) => `
-        <section class="card">
-          <button class="home" type="button" data-open="${h.id}">
-            <div class="home-top">
-              <h3>${escapeHtml(h.title || "İsimsiz ev")}</h3>
-              <span class="badge">${escapeHtml(h.rooms)}</span>
+      box.innerHTML = homes.map((h, i) => `
+        <section class="card home-card">
+          <div>
+            <button class="home" type="button" data-open="${h.id}">
+              <div class="home-top">
+                <h3>${escapeHtml(h.title || "İsimsiz ev")}</h3>
+                <span class="badge">${escapeHtml(h.rooms)}</span>
+              </div>
+              <p class="meta">${fmt(h.price)} · kredi ${h.loan > 0 ? fmt(h.loan) : "yok"}<br/>60 ay ${h.loan > 0 ? fmt(h.pay60) : "—"} · 120 ay ${h.loan > 0 ? fmt(h.pay120) : "—"}</p>
+            </button>
+            <div class="home-actions">
+              ${safeUrl(h.link) ? `<a class="mini" href="${escapeAttr(safeUrl(h.link))}" target="_blank" rel="noopener">İlan</a>` : ""}
+              <button class="mini danger" type="button" data-del="${h.id}">Sil</button>
             </div>
-            <p class="meta">${fmt(h.price)} · kredi ${h.loan > 0 ? fmt(h.loan) : "yok"}<br/>60 ay ${h.loan > 0 ? fmt(h.pay60) : "—"} · 120 ay ${h.loan > 0 ? fmt(h.pay120) : "—"}</p>
-          </button>
-          <div class="home-actions">
-            ${safeUrl(h.link) ? `<a class="mini" href="${escapeAttr(safeUrl(h.link))}" target="_blank" rel="noopener">İlan</a>` : ""}
-            <button class="mini danger" type="button" data-del="${h.id}">Sil</button>
+          </div>
+          <div class="rank">
+            <button class="mini" type="button" data-up="${h.id}" ${i === 0 ? "disabled" : ""} aria-label="Yukarı">▲</button>
+            <button class="mini" type="button" data-down="${h.id}" ${i === homes.length - 1 ? "disabled" : ""} aria-label="Aşağı">▼</button>
           </div>
         </section>
       `).join("");
@@ -1048,10 +1104,9 @@
         return;
       }
       if (!home.title) home.title = `${home.rooms} · ${fmt(home.price)}`;
-      currentId = home.id;
-      const homes = loadHomes().filter((x) => x.id !== home.id);
-      homes.push(home);
-      saveHomes(homes);
+      const homes = orderedHomes().filter((x) => x.id !== home.id);
+      homes.unshift(home);
+      setOrder(homes);
       renderList();
       toast("Kaydedildi");
       fillForm({ cash: home.cash });
@@ -1059,11 +1114,21 @@
     };
 
     document.getElementById("homeList").addEventListener("click", (e) => {
+      const up = e.target.closest("[data-up]");
+      const down = e.target.closest("[data-down]");
       const open = e.target.closest("[data-open]");
       const del = e.target.closest("[data-del]");
+      if (up) {
+        moveHome(up.dataset.up, -1);
+        return;
+      }
+      if (down) {
+        moveHome(down.dataset.down, 1);
+        return;
+      }
       if (del) {
         e.preventDefault();
-        saveHomes(loadHomes().filter((x) => x.id !== del.dataset.del));
+        setOrder(orderedHomes().filter((x) => x.id !== del.dataset.del));
         if (currentId === del.dataset.del) fillForm(null);
         renderList();
         toast("Silindi");
