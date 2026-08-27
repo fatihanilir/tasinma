@@ -451,13 +451,56 @@
 
     .hidden { display: none !important; }
 
+    body.locked .wrap,
+    body.locked .bar { display: none !important; }
+
+    .gate {
+      min-height: 100dvh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 18px;
+    }
+
+    body.locked .gate { display: flex; }
+
+    .gate-card {
+      width: min(420px, 100%);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 22px 24px;
+    }
+
+    .gate-card h1 {
+      font-size: 32px;
+      margin: 8px 0 8px;
+    }
+
+    .gate-card .lead { max-width: none; margin-bottom: 22px; }
+
+    .gate-card .btn { width: 100%; margin-top: 16px; }
+
     @media (max-width: 420px) {
       .loan-grid { grid-template-columns: 1fr; }
       .term .pay { font-size: 30px; }
     }
   </style>
 </head>
-<body>
+<body class="locked">
+  <section class="gate" id="gate">
+    <div class="gate-card">
+      <div class="eyebrow"><span class="dot"></span> Ev alım planı</div>
+      <h1>Hoş geldin</h1>
+      <p class="lead">Devam etmek için parolayı yaz.</p>
+      <label class="label" for="pass">Parola</label>
+      <input id="pass" class="plain" type="password" autocomplete="current-password" />
+      <p class="warn" id="passErr" hidden>Parola yanlış.</p>
+      <button class="btn primary" type="button" id="btnUnlock">Giriş</button>
+    </div>
+  </section>
+
   <main class="wrap">
     <header>
       <div class="eyebrow"><span class="dot"></span> Ev alım planı</div>
@@ -933,7 +976,35 @@
       el.addEventListener("change", calc);
     });
 
-    boot();
+    const PASS = "melisa";
+    const GATE = "tasinma.gate";
+
+    const unlock = () => {
+      document.body.classList.remove("locked");
+      boot();
+    };
+
+    const tryUnlock = () => {
+      const value = document.getElementById("pass").value.trim();
+      const err = document.getElementById("passErr");
+      if (value.toLocaleLowerCase("tr") === PASS) {
+        sessionStorage.setItem(GATE, "1");
+        err.hidden = true;
+        unlock();
+        return;
+      }
+      err.hidden = false;
+      document.getElementById("pass").value = "";
+      document.getElementById("pass").focus();
+    };
+
+    document.getElementById("btnUnlock").onclick = tryUnlock;
+    document.getElementById("pass").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") tryUnlock();
+    });
+
+    if (sessionStorage.getItem(GATE) === "1") unlock();
+    else document.getElementById("pass").focus();
   </script>
 </body>
 </html>
