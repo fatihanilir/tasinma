@@ -451,8 +451,59 @@
 
     .hidden { display: none !important; }
 
-    body.locked .wrap,
-    body.locked .bar { display: none !important; }
+    .preview {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .preview.hidden { display: none !important; }
+
+    .preview-bg {
+      position: absolute;
+      inset: 0;
+      border: 0;
+      background: rgba(26, 36, 31, 0.46);
+      cursor: pointer;
+    }
+
+    .preview-sheet {
+      position: relative;
+      width: min(560px, 100%);
+      max-height: min(92dvh, 920px);
+      overflow: auto;
+      background: linear-gradient(180deg, #f7f2ea 0%, #efe6d8 100%);
+      border-radius: 28px 28px 0 0;
+      padding: 18px 16px calc(24px + env(safe-area-inset-bottom));
+      box-shadow: 0 -18px 50px rgba(28, 61, 50, 0.18);
+    }
+
+    .preview-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding: 4px 4px 0;
+    }
+
+    .preview-head h2 {
+      font-family: Fraunces, serif;
+      font-size: 24px;
+      letter-spacing: -0.03em;
+      color: var(--forest);
+      margin-top: 8px;
+    }
+
+    .preview .term { min-height: 0; margin-bottom: 0; }
+    .preview .loan-grid { margin-bottom: 14px; }
+    .preview .hero { margin-bottom: 14px; }
+
+    body.preview-open { overflow: hidden; }
+    body.preview-open .bar { display: none !important; }
 
     .gate {
       min-height: 100dvh;
@@ -626,6 +677,53 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <div class="preview hidden" id="preview" role="dialog" aria-modal="true" aria-labelledby="pvTitle">
+    <button class="preview-bg" id="previewBg" type="button" aria-label="Kapat"></button>
+    <div class="preview-sheet">
+      <div class="preview-head">
+        <div>
+          <span class="badge" id="pvRooms">2+1</span>
+          <h2 id="pvTitle">Ev</h2>
+        </div>
+        <button class="mini" type="button" id="previewClose">Kapat</button>
+      </div>
+
+      <section class="card hero">
+        <h2>Çekilecek kredi</h2>
+        <div class="big" id="pvLoan">0 TL</div>
+        <div class="split">
+          <div class="chip"><small>Toplam maliyet</small><b id="pvTotal">0 TL</b></div>
+          <div class="chip"><small>Nakit</small><b id="pvCash">0 TL</b></div>
+        </div>
+      </section>
+
+      <div class="loan-grid">
+        <article class="term">
+          <div class="yrs">60 ay · 5 yıl</div>
+          <div class="pay" id="pv60">—</div>
+          <p>Aylık ödeme<br /><span id="pvTot60"></span></p>
+        </article>
+        <article class="term">
+          <div class="yrs">120 ay · 10 yıl</div>
+          <div class="pay" id="pv120">—</div>
+          <p>Aylık ödeme<br /><span id="pvTot120"></span></p>
+        </article>
+      </div>
+
+      <section class="card">
+        <span class="label">Maliyet kırılımı</span>
+        <div class="rows">
+          <div class="row"><span>Ev fiyatı</span><b id="pvPrice">—</b></div>
+          <div class="row"><span>Alım-satım vergisi %4</span><b id="pvTax">—</b></div>
+          <div class="row"><span id="pvCommLabel">Emlakçı komisyonu</span><b id="pvComm">—</b></div>
+          <div class="row"><span>Taşınma + badana</span><b>120.000 TL</b></div>
+          <div class="row"><span>Eksper</span><b>33.000 TL</b></div>
+          <div class="row total"><span>Toplam</span><b id="pvSum">—</b></div>
+        </div>
+      </section>
+    </div>
+  </div>
 
   <script>
     const MOVE = 120_000;
@@ -892,6 +990,38 @@
       savedAt: Date.now(),
     });
 
+    const closePreview = () => {
+      document.getElementById("preview").classList.add("hidden");
+      document.body.classList.remove("preview-open");
+    };
+
+    const openPreview = (home) => {
+      const d = figures(home);
+      document.getElementById("pvTitle").textContent = d.title || "İsimsiz ev";
+      document.getElementById("pvRooms").textContent = d.rooms || "2+1";
+      document.getElementById("pvLoan").textContent = d.loan > 0 ? fmt(d.loan) : "Kredi gerekmez";
+      document.getElementById("pvTotal").textContent = fmt(d.total);
+      document.getElementById("pvCash").textContent = fmt(d.cash);
+      document.getElementById("pv60").textContent = d.loan > 0 ? fmt(d.pay60) : "—";
+      document.getElementById("pv120").textContent = d.loan > 0 ? fmt(d.pay120) : "—";
+      document.getElementById("pvTot60").textContent = d.loan > 0 ? `Toplam geri ödeme ${fmt(d.pay60 * 60)}` : "";
+      document.getElementById("pvTot120").textContent = d.loan > 0 ? `Toplam geri ödeme ${fmt(d.pay120 * 120)}` : "";
+      document.getElementById("pvPrice").textContent = fmt(d.price);
+      document.getElementById("pvTax").textContent = fmt(d.tax);
+      document.getElementById("pvComm").textContent = fmt(d.comm);
+      document.getElementById("pvCommLabel").textContent =
+        Number(home.comm) === 0 ? "Emlakçı (sahibinden)" : `Emlakçı komisyonu %${Number(home.comm) * 100}`;
+      document.getElementById("pvSum").textContent = fmt(d.total);
+      document.getElementById("preview").classList.remove("hidden");
+      document.body.classList.add("preview-open");
+    };
+
+    document.getElementById("previewClose").onclick = closePreview;
+    document.getElementById("previewBg").onclick = closePreview;
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closePreview();
+    });
+
     const fillForm = (h) => {
       currentId = h?.id || null;
       els.title.value = h?.title || "";
@@ -934,9 +1064,7 @@
       }
       if (open) {
         const home = loadHomes().find((x) => x.id === open.dataset.open);
-        if (!home) return;
-        fillForm(home);
-        showView("edit");
+        if (home) openPreview(home);
       }
     });
 
