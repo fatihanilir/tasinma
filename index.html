@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1c3d32" />
+  <title>Ev Alım Hesaplayıcı</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --ink: #1a241f;
+      --muted: #5d6b64;
+      --line: rgba(28, 61, 50, 0.12);
+      --card: rgba(255, 252, 247, 0.86);
+      --forest: #1c3d32;
+      --forest-2: #2a5748;
+      --gold: #c9a46a;
+      --gold-soft: #efe3cc;
+      --coral: #b85c38;
+      --shadow: 0 18px 50px rgba(28, 61, 50, 0.12);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Outfit, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #fff8ec 0%, transparent 55%),
+        radial-gradient(800px 500px at 110% 8%, #e4d3b4 0%, transparent 50%),
+        linear-gradient(180deg, #f7f2ea 0%, #efe6d8 100%);
+    }
+
+    .wrap {
+      width: min(560px, 100%);
+      margin: 0 auto;
+      padding: 22px 18px 88px;
+    }
+
+    header { padding: 4px 4px 18px; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--forest-2);
+      font-weight: 600;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 4px rgba(201, 164, 106, 0.22);
+    }
+
+    h1 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(28px, 7vw, 40px);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin-top: 10px;
+      color: var(--forest);
+    }
+
+    .lead {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: var(--gold-soft);
+      padding: 6px;
+      border-radius: 16px;
+      margin-bottom: 16px;
+    }
+
+    .tabs button {
+      border: 0;
+      background: transparent;
+      padding: 11px 8px;
+      border-radius: 12px;
+      font: 600 14px Outfit, sans-serif;
+      color: var(--forest-2);
+      cursor: pointer;
+    }
+
+    .tabs button.on {
+      background: var(--forest);
+      color: #f8f3ea;
+      box-shadow: 0 8px 18px rgba(28, 61, 50, 0.22);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      padding: 20px;
+      margin-bottom: 14px;
+    }
+
+    .label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .money-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      border-bottom: 1.5px solid var(--forest);
+      padding-bottom: 8px;
+    }
+
+    .money-row span {
+      font-family: Fraunces, serif;
+      font-size: 18px;
+      color: var(--forest);
+    }
+
+    input.money, input.plain {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--forest);
+    }
+
+    input.money {
+      font-family: Fraunces, serif;
+      font-size: 34px;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+    }
+
+    input.plain {
+      font-family: Outfit, sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      border-bottom: 1.5px solid var(--forest);
+      padding-bottom: 8px;
+    }
+
+    .hint { margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+    .seg {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      background: var(--gold-soft);
+      padding: 6px;
+      border-radius: 16px;
+    }
+
+    .seg.two { grid-template-columns: 1fr 1fr; }
+    .seg input { position: absolute; opacity: 0; pointer-events: none; }
+
+    .seg label {
+      text-align: center;
+      padding: 11px 6px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--forest-2);
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .seg input:checked + label {
+      background: var(--forest);
+      color: #f8f3ea;
+      box-shadow: 0 8px 18px rgba(28, 61, 50, 0.22);
+    }
+
+    .hero {
+      background: linear-gradient(160deg, #1c3d32 0%, #2a5748 58%, #3a6a58 100%);
+      color: #f7f1e6;
+      border: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -40px;
+      top: -50px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: rgba(201, 164, 106, 0.18);
+    }
+
+    .hero h2 {
+      font-family: Fraunces, serif;
+      font-size: 15px;
+      font-weight: 500;
+      opacity: 0.78;
+      position: relative;
+    }
+
+    .hero .big {
+      font-family: Fraunces, serif;
+      font-size: clamp(34px, 9vw, 44px);
+      font-weight: 650;
+      letter-spacing: -0.04em;
+      margin: 6px 0 16px;
+      position: relative;
+    }
+
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .chip small {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    .chip b { display: block; margin-top: 4px; font-size: 16px; font-weight: 600; }
+
+    .loan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .term {
+      background: #fffdf8;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px 14px 18px;
+      min-height: 168px;
+    }
+
+    .term .yrs {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--coral);
+    }
+
+    .term .pay {
+      font-family: Fraunces, serif;
+      font-size: 26px;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--forest);
+      margin: 10px 0 6px;
+    }
+
+    .term p { font-size: 12px; color: var(--muted); line-height: 1.45; }
+
+    .rows { display: grid; gap: 10px; }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed var(--line);
+      font-size: 14px;
+    }
+
+    .row:last-child { border: 0; padding: 0; }
+    .row span { color: var(--muted); }
+    .row b { font-weight: 600; color: var(--ink); }
+    .row.total b { color: var(--forest); font-family: Fraunces, serif; font-size: 18px; }
+
+    .warn {
+      margin-top: 8px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #f3e6d8;
+      color: #7a3d22;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .home {
+      display: grid;
+      gap: 8px;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      font: inherit;
+      color: inherit;
+    }
+
+    .home-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .badge {
+      flex-shrink: 0;
+      background: var(--gold-soft);
+      color: var(--forest);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 9px;
+      border-radius: 999px;
+    }
+
+    .home h3 {
+      font-family: Fraunces, serif;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+      color: var(--forest);
+    }
+
+    .meta { font-size: 13px; color: var(--muted); line-height: 1.45; }
+
+    .home-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .mini {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--forest-2);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font: 600 12px Outfit, sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .mini.danger { color: var(--coral); }
+
+    .empty {
+      text-align: center;
+      padding: 28px 10px 18px;
+      color: var(--muted);
+    }
+
+    .empty b { display: block; color: var(--forest); font-family: Fraunces, serif; font-size: 22px; margin-bottom: 6px; }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 12px;
+      font: 600 14px Outfit, sans-serif;
+      cursor: pointer;
+    }
+
+    .btn.primary { background: var(--forest); color: #f8f3ea; }
+    .btn.ghost { background: var(--gold-soft); color: var(--forest); }
+
+    .bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, transparent, #efe6d8 30%);
+    }
+
+    .bar inner, .bar .inner {
+      width: min(560px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 10px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 92px;
+      transform: translateX(-50%);
+      background: var(--forest);
+      color: #f8f3ea;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.25s ease;
+      z-index: 20;
+    }
+
+    .toast.show { opacity: 1; }
+
+    dialog {
+      border: 0;
+      border-radius: 22px;
+      padding: 22px;
+      width: min(420px, calc(100vw - 32px));
+      background: #fffdf8;
+      box-shadow: var(--shadow);
+    }
+
+    dialog::backdrop { background: rgba(26, 36, 31, 0.45); }
+
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      margin: 12px 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      font: 13px ui-monospace, monospace;
+      resize: vertical;
+    }
+
+    footer { text-align: center; color: var(--muted); font-size: 12px; padding-top: 8px; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 420px) {
+      .loan-grid { grid-template-columns: 1fr; }
+      .term .pay { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="eyebrow"><span class="dot"></span> Ev alım planı</div>
+      <h1 id="pageTitle">Kaydettiğiniz evler</h1>
+      <p class="lead" id="pageLead">İkisinin telefonunda da durur. Eşinle paylaşmak için yedek kodu gönderin.</p>
+    </header>
+
+    <div class="tabs">
+      <button type="button" id="tabEdit" class="on">Hesap</button>
+      <button type="button" id="tabList">Kayıtlı evler</button>
+    </div>
+
+    <section id="listView">
+      <div id="homeList"></div>
+      <button class="btn primary" type="button" id="btnAddFromList" style="width:100%;margin-bottom:14px">Yeni ev ekle</button>
+      <section class="card">
+        <span class="label">Ortak liste</span>
+        <p class="hint" id="storageHint" style="margin:0">Kayıtlar ücretsiz bulutta. Biriniz kaydedince diğerleri de görür; adres kopyalamaya gerek yok.</p>
+      </section>
+    </section>
+
+    <section id="editView" class="hidden">
+      <section class="card">
+        <label class="label" for="price">Evin fiyatı</label>
+        <div class="money-row">
+          <input id="price" class="money" type="text" inputmode="numeric" value="" autocomplete="off" />
+          <span>TL</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <label class="label" for="cash">Elindeki nakit</label>
+        <div class="money-row">
+          <input id="cash" class="money" type="text" inputmode="numeric" value="7.700.000" autocomplete="off" />
+          <span>TL</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <span class="label">Emlakçı komisyonu</span>
+        <div class="seg" role="radiogroup" aria-label="Komisyon">
+          <input type="radio" name="comm" id="c0" value="0" />
+          <label for="c0">Sahibinden</label>
+          <input type="radio" name="comm" id="c2" value="0.02" checked />
+          <label for="c2">%2</label>
+          <input type="radio" name="comm" id="c4" value="0.04" />
+          <label for="c4">%4</label>
+        </div>
+        <p class="hint">Sahibinden seçilince komisyon 0 olur. Alım-satım vergisi her durumda %4.</p>
+      </section>
+
+      <section class="card">
+        <span class="label">Aylık faiz oranı</span>
+        <div class="seg two" role="radiogroup" aria-label="Faiz">
+          <input type="radio" name="rate" id="r288" value="0.0288" checked />
+          <label for="r288">%2,88</label>
+          <input type="radio" name="rate" id="r300" value="0.03" />
+          <label for="r300">%3,00</label>
+        </div>
+      </section>
+
+      <section class="card hero">
+        <h2>Çekilecek kredi</h2>
+        <div class="big" id="loan">0 TL</div>
+        <div class="split">
+          <div class="chip"><small>Toplam maliyet</small><b id="total">0 TL</b></div>
+          <div class="chip"><small>Nakit</small><b id="cashOut">7.700.000 TL</b></div>
+        </div>
+      </section>
+
+      <div class="loan-grid">
+        <article class="term">
+          <div class="yrs">60 ay · 5 yıl</div>
+          <div class="pay" id="p60">—</div>
+          <p>Aylık ödeme<br /><span id="tot60"></span></p>
+        </article>
+        <article class="term">
+          <div class="yrs">120 ay · 10 yıl</div>
+          <div class="pay" id="p120">—</div>
+          <p>Aylık ödeme<br /><span id="tot120"></span></p>
+        </article>
+      </div>
+
+      <section class="card" style="margin-top:14px">
+        <span class="label">Maliyet kırılımı</span>
+        <div class="rows">
+          <div class="row"><span>Ev fiyatı</span><b id="rPrice">—</b></div>
+          <div class="row"><span>Alım-satım vergisi %4</span><b id="rTax">—</b></div>
+          <div class="row"><span id="rCommLabel">Emlakçı komisyonu</span><b id="rComm">—</b></div>
+          <div class="row"><span>Taşınma + badana</span><b>120.000 TL</b></div>
+          <div class="row"><span>Eksper</span><b>33.000 TL</b></div>
+          <div class="row total"><span>Toplam</span><b id="rTotal">—</b></div>
+        </div>
+        <p class="warn" id="warn" hidden></p>
+      </section>
+
+      <section class="card">
+        <label class="label" for="link">İlan linki</label>
+        <input id="link" class="plain" type="url" placeholder="https://..." inputmode="url" autocomplete="off" />
+        <p class="hint" id="openLinkWrap" hidden><a id="openLink" class="mini" href="#" target="_blank" rel="noopener">İlanı tarayıcıda aç</a></p>
+      </section>
+
+      <section class="card">
+        <span class="label">Oda tipi</span>
+        <div class="seg two" role="radiogroup" aria-label="Oda">
+          <input type="radio" name="rooms" id="o21" value="2+1" checked />
+          <label for="o21">2+1</label>
+          <input type="radio" name="rooms" id="o31" value="3+1" />
+          <label for="o31">3+1</label>
+        </div>
+      </section>
+
+      <section class="card">
+        <label class="label" for="title">Başlık</label>
+        <input id="title" class="plain" type="text" placeholder="Örn. Caddebostan deniz manzara" autocomplete="off" />
+      </section>
+    </section>
+
+    <footer>Sadece planlama içindir. Banka teklifi farklılık gösterebilir.</footer>
+  </main>
+
+  <div class="bar" id="editBar">
+    <div class="inner">
+      <button class="btn ghost" type="button" id="btnNew">Yeni ev</button>
+      <button class="btn primary" type="button" id="btnSave">Kaydet</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const MOVE = 120_000;
+    const EXPERT = 33_000;
+    const TAX = 0.04;
+    const KEY = "tasinma.homes.v1";
+
+    const els = {
+      price: document.getElementById("price"),
+      cash: document.getElementById("cash"),
+      title: document.getElementById("title"),
+      link: document.getElementById("link"),
+      loan: document.getElementById("loan"),
+      total: document.getElementById("total"),
+      cashOut: document.getElementById("cashOut"),
+      p60: document.getElementById("p60"),
+      p120: document.getElementById("p120"),
+      tot60: document.getElementById("tot60"),
+      tot120: document.getElementById("tot120"),
+      rPrice: document.getElementById("rPrice"),
+      rTax: document.getElementById("rTax"),
+      rComm: document.getElementById("rComm"),
+      rCommLabel: document.getElementById("rCommLabel"),
+      rTotal: document.getElementById("rTotal"),
+      warn: document.getElementById("warn"),
+      openLink: document.getElementById("openLink"),
+      openLinkWrap: document.getElementById("openLinkWrap"),
+    };
+
+    let currentId = null;
+    let lastCalc = null;
+
+    const fmt = (n) =>
+      new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(Math.round(n)) + " TL";
+
+    const parseTR = (raw) => Number(String(raw).replace(/\./g, "").replace(/,/g, ".").replace(/[^\d.]/g, "")) || 0;
+
+    const formatInput = (el) => {
+      const n = parseTR(el.value);
+      el.value = n ? new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(n) : "";
+    };
+
+    const installment = (principal, monthlyRate, months) => {
+      if (principal <= 0) return 0;
+      if (monthlyRate === 0) return principal / months;
+      const pow = Math.pow(1 + monthlyRate, months);
+      return principal * (monthlyRate * pow) / (pow - 1);
+    };
+
+    const CLOUD_URL = "https://mantledb.sh/v2/tasinma-fa7950ff7e61849e/homes";
+    const CLOUD_KEY = "b130fe1984cd9e31312ebd04633bc0f26d05cfc9bb6542d3a3d2412cd93c9ef7";
+
+    let homesCache = [];
+    let cloudOk = false;
+
+    const loadHomes = () => homesCache;
+
+    const cloudHeaders = () => ({
+      "Content-Type": "application/json",
+      "X-Mantle-Key": CLOUD_KEY,
+    });
+
+    const parseCloud = (data) => {
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.homes)) return data.homes;
+      return [];
+    };
+
+    const pullCloud = async () => {
+      const r = await fetch(CLOUD_URL, { headers: cloudHeaders(), cache: "no-store" });
+      if (!r.ok) throw new Error("cloud");
+      return parseCloud(await r.json());
+    };
+
+    const pushCloud = async (homes) => {
+      const r = await fetch(CLOUD_URL, {
+        method: "POST",
+        headers: cloudHeaders(),
+        body: JSON.stringify({ homes, updatedAt: Date.now() }),
+      });
+      if (!r.ok) throw new Error("cloud");
+      try {
+        await fetch("/api/homes", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(homes),
+        });
+      } catch {}
+    };
+
+    const remember = (homes) => {
+      homesCache = homes;
+      try { localStorage.setItem(KEY, JSON.stringify(homes)); } catch {}
+    };
+
+    const saveHomes = (homes) => {
+      remember(homes);
+      pushCloud(homes)
+        .then(() => { cloudOk = true; setStorageHint(); })
+        .catch(() => { cloudOk = false; setStorageHint(); toast("Buluta yazılamadı, tekrar dene"); });
+    };
+
+    const setStorageHint = () => {
+      const el = document.getElementById("storageHint");
+      if (!el) return;
+      el.innerHTML = cloudOk
+        ? "Kayıtlar ortak bulutta. Eşin veya annen aynı siteyi açınca aynı listeyi görür."
+        : "Buluta ulaşılamadı. İnterneti kontrol et; kayıt şimdilik bu telefonda duruyor.";
+    };
+
+    const refreshFromCloud = async (silent) => {
+      try {
+        const remote = await pullCloud();
+        cloudOk = true;
+        remember(remote);
+        renderList();
+        setStorageHint();
+      } catch {
+        cloudOk = false;
+        setStorageHint();
+        if (!silent) toast("Liste yenilenemedi");
+      }
+    };
+
+    const boot = async () => {
+      let fromLocal = [];
+      try { fromLocal = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch {}
+
+      try {
+        const remote = await pullCloud();
+        cloudOk = true;
+        if (remote.length) remember(remote);
+        else if (fromLocal.length) {
+          remember(fromLocal);
+          await pushCloud(fromLocal);
+        } else remember([]);
+      } catch {
+        cloudOk = false;
+        remember(fromLocal);
+      }
+
+      setStorageHint();
+      fillForm(null);
+      renderList();
+      showView(homesCache.length ? "list" : "edit");
+    };
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") refreshFromCloud(true);
+    });
+
+    const toast = (msg) => {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(toast._id);
+      toast._id = setTimeout(() => t.classList.remove("show"), 2200);
+    };
+
+    const checked = (name) => document.querySelector(`input[name="${name}"]:checked`);
+
+    const setRadio = (name, value) => {
+      const el = [...document.querySelectorAll(`input[name="${name}"]`)].find((i) => i.value === String(value));
+      if (el) el.checked = true;
+    };
+
+    const figures = (home) => {
+      const price = home.price;
+      const cash = home.cash;
+      const commRate = Number(home.comm);
+      const rate = Number(home.rate);
+      const tax = price * TAX;
+      const comm = price * commRate;
+      const total = price + tax + comm + MOVE + EXPERT;
+      const loan = total - cash;
+      return {
+        ...home,
+        tax, comm, total, loan,
+        pay60: installment(Math.max(loan, 0), rate, 60),
+        pay120: installment(Math.max(loan, 0), rate, 120),
+      };
+    };
+
+    const calc = () => {
+      const data = figures({
+        price: parseTR(els.price.value),
+        cash: parseTR(els.cash.value),
+        comm: Number(checked("comm").value),
+        rate: Number(checked("rate").value),
+      });
+      lastCalc = data;
+
+      els.loan.textContent = data.loan > 0 ? fmt(data.loan) : "Kredi gerekmez";
+      els.total.textContent = fmt(data.total);
+      els.cashOut.textContent = fmt(data.cash);
+      els.rPrice.textContent = fmt(data.price);
+      els.rTax.textContent = fmt(data.tax);
+      els.rComm.textContent = fmt(data.comm);
+      els.rCommLabel.textContent =
+        data.comm === 0 ? "Emlakçı (sahibinden)" : `Emlakçı komisyonu %${Number(checked("comm").value) * 100}`;
+      els.rTotal.textContent = fmt(data.total);
+      els.p60.textContent = data.loan > 0 ? fmt(data.pay60) : "—";
+      els.p120.textContent = data.loan > 0 ? fmt(data.pay120) : "—";
+      els.tot60.textContent = data.loan > 0 ? `Toplam geri ödeme ${fmt(data.pay60 * 60)}` : "";
+      els.tot120.textContent = data.loan > 0 ? `Toplam geri ödeme ${fmt(data.pay120 * 120)}` : "";
+
+      const url = safeUrl(els.link.value.trim());
+      els.openLinkWrap.hidden = !url;
+      els.openLink.href = url || "#";
+
+      if (!data.price) {
+        els.warn.hidden = false;
+        els.warn.textContent = "Hesap için ev fiyatını gir.";
+      } else if (data.loan <= 0) {
+        els.warn.hidden = false;
+        els.warn.textContent = `Nakit, toplam maliyeti ${fmt(Math.abs(data.loan))} karşılıyor. Kredi çekmene gerek yok.`;
+      } else {
+        els.warn.hidden = true;
+      }
+    };
+
+    const showView = (name) => {
+      const list = name === "list";
+      document.getElementById("listView").classList.toggle("hidden", !list);
+      document.getElementById("editView").classList.toggle("hidden", list);
+      document.getElementById("editBar").classList.toggle("hidden", list);
+      document.getElementById("tabList").classList.toggle("on", list);
+      document.getElementById("tabEdit").classList.toggle("on", !list);
+      document.getElementById("pageTitle").textContent = list ? "Kaydettiğiniz evler" : (els.title.value.trim() || "Yeni ev");
+      document.getElementById("pageLead").textContent = list
+        ? "Aile aynı listeyi görür. Biriniz kaydedince diğer cihazlarda da çıkar."
+        : "Başlık, ilan ve oda tipini yazıp kaydedin.";
+    };
+
+    const renderList = () => {
+      const box = document.getElementById("homeList");
+      const homes = loadHomes().map(figures).sort((a, b) => b.savedAt - a.savedAt);
+      if (!homes.length) {
+        box.innerHTML = `<section class="card empty"><b>Henüz ev yok</b>Hesap sekmesinden bir ilan kaydedin.</section>`;
+        return;
+      }
+      box.innerHTML = homes.map((h) => `
+        <section class="card">
+          <button class="home" type="button" data-open="${h.id}">
+            <div class="home-top">
+              <h3>${escapeHtml(h.title || "İsimsiz ev")}</h3>
+              <span class="badge">${escapeHtml(h.rooms)}</span>
+            </div>
+            <p class="meta">${fmt(h.price)} · kredi ${h.loan > 0 ? fmt(h.loan) : "yok"}<br/>60 ay ${h.loan > 0 ? fmt(h.pay60) : "—"} · 120 ay ${h.loan > 0 ? fmt(h.pay120) : "—"}</p>
+          </button>
+          <div class="home-actions">
+            ${safeUrl(h.link) ? `<a class="mini" href="${escapeAttr(safeUrl(h.link))}" target="_blank" rel="noopener">İlan</a>` : ""}
+            <button class="mini danger" type="button" data-del="${h.id}">Sil</button>
+          </div>
+        </section>
+      `).join("");
+    };
+
+    const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+
+    const escapeAttr = (s) => escapeHtml(s).replace(/`/g, "");
+    const safeUrl = (u) => /^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "";
+
+    const snapshot = () => ({
+      id: currentId || crypto.randomUUID(),
+      title: els.title.value.trim(),
+      link: els.link.value.trim(),
+      rooms: checked("rooms").value,
+      price: parseTR(els.price.value),
+      cash: parseTR(els.cash.value),
+      comm: Number(checked("comm").value),
+      rate: Number(checked("rate").value),
+      savedAt: Date.now(),
+    });
+
+    const fillForm = (h) => {
+      currentId = h?.id || null;
+      els.title.value = h?.title || "";
+      els.link.value = h?.link || "";
+      els.price.value = h?.price ? new Intl.NumberFormat("tr-TR").format(h.price) : "";
+      els.cash.value = new Intl.NumberFormat("tr-TR").format(h?.cash || 7_700_000);
+      setRadio("rooms", h?.rooms === "3+1" ? "3+1" : "2+1");
+      setRadio("comm", h?.comm ?? 0.02);
+      setRadio("rate", h?.rate ?? 0.0288);
+      calc();
+    };
+
+    const saveCurrent = () => {
+      const home = snapshot();
+      if (!home.price) {
+        toast("Önce ev fiyatını gir");
+        return;
+      }
+      if (!home.title) home.title = `${home.rooms} · ${fmt(home.price)}`;
+      currentId = home.id;
+      const homes = loadHomes().filter((x) => x.id !== home.id);
+      homes.push(home);
+      saveHomes(homes);
+      renderList();
+      toast("Kaydedildi");
+      document.getElementById("pageTitle").textContent = home.title;
+    };
+
+    document.getElementById("homeList").addEventListener("click", (e) => {
+      const open = e.target.closest("[data-open]");
+      const del = e.target.closest("[data-del]");
+      if (del) {
+        e.preventDefault();
+        saveHomes(loadHomes().filter((x) => x.id !== del.dataset.del));
+        if (currentId === del.dataset.del) fillForm(null);
+        renderList();
+        toast("Silindi");
+        return;
+      }
+      if (open) {
+        const home = loadHomes().find((x) => x.id === open.dataset.open);
+        if (!home) return;
+        fillForm(home);
+        showView("edit");
+      }
+    });
+
+    document.getElementById("tabList").onclick = () => { renderList(); showView("list"); refreshFromCloud(true); };
+    document.getElementById("tabEdit").onclick = () => showView("edit");
+    document.getElementById("btnSave").onclick = saveCurrent;
+    const newHome = () => {
+      fillForm({ cash: parseTR(els.cash.value) || 7_700_000 });
+      showView("edit");
+      toast("Yeni ev");
+    };
+    document.getElementById("btnNew").onclick = newHome;
+    document.getElementById("btnAddFromList").onclick = newHome;
+
+    ["price", "cash"].forEach((id) => {
+      const el = els[id];
+      el.addEventListener("input", () => { formatInput(el); calc(); });
+      formatInput(el);
+    });
+
+    ["title", "link"].forEach((id) => els[id].addEventListener("input", calc));
+    document.querySelectorAll('input[name="comm"], input[name="rate"], input[name="rooms"]').forEach((el) => {
+      el.addEventListener("change", calc);
+    });
+
+    boot();
+  </script>
+</body>
+</html>
