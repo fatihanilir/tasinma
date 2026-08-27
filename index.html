@@ -845,7 +845,14 @@
       try {
         const remote = await pullCloud();
         cloudOk = true;
-        if (remote.length) remember(remote);
+        if (remote.length) {
+          remember(remote);
+          const lastKeep = Number(localStorage.getItem("tasinma.keep") || 0);
+          if (Date.now() - lastKeep > 24 * 60 * 60 * 1000) {
+            await pushCloud(remote);
+            localStorage.setItem("tasinma.keep", String(Date.now()));
+          }
+        }
         else if (fromLocal.length) {
           remember(fromLocal);
           await pushCloud(fromLocal);
