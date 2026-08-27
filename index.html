@@ -505,7 +505,7 @@
     <header>
       <div class="eyebrow"><span class="dot"></span> Ev alım planı</div>
       <h1 id="pageTitle">Kaydettiğiniz evler</h1>
-      <p class="lead" id="pageLead">İkisinin telefonunda da durur. Eşinle paylaşmak için yedek kodu gönderin.</p>
+      <p class="lead" id="pageLead">Evin fiyatını gir, masraflar ve taksitler anında çıksın.</p>
     </header>
 
     <div class="tabs">
@@ -516,10 +516,6 @@
     <section id="listView">
       <div id="homeList"></div>
       <button class="btn primary" type="button" id="btnAddFromList" style="width:100%;margin-bottom:14px">Yeni ev ekle</button>
-      <section class="card">
-        <span class="label">Ortak liste</span>
-        <p class="hint" id="storageHint" style="margin:0">Kayıtlar ücretsiz bulutta. Biriniz kaydedince diğerleri de görür; adres kopyalamaya gerek yok.</p>
-      </section>
     </section>
 
     <section id="editView" class="hidden">
@@ -728,16 +724,8 @@
     const saveHomes = (homes) => {
       remember(homes);
       pushCloud(homes)
-        .then(() => { cloudOk = true; setStorageHint(); })
-        .catch(() => { cloudOk = false; setStorageHint(); toast("Buluta yazılamadı, tekrar dene"); });
-    };
-
-    const setStorageHint = () => {
-      const el = document.getElementById("storageHint");
-      if (!el) return;
-      el.innerHTML = cloudOk
-        ? "Kayıtlar ortak bulutta. Eşin veya annen aynı siteyi açınca aynı listeyi görür."
-        : "Buluta ulaşılamadı. İnterneti kontrol et; kayıt şimdilik bu telefonda duruyor.";
+        .then(() => { cloudOk = true; })
+        .catch(() => { cloudOk = false; toast("Kaydedilemedi, tekrar dene"); });
     };
 
     const refreshFromCloud = async (silent) => {
@@ -746,10 +734,8 @@
         cloudOk = true;
         remember(remote);
         renderList();
-        setStorageHint();
       } catch {
         cloudOk = false;
-        setStorageHint();
         if (!silent) toast("Liste yenilenemedi");
       }
     };
@@ -771,7 +757,6 @@
         remember(fromLocal);
       }
 
-      setStorageHint();
       fillForm(null);
       renderList();
       showView(homesCache.length ? "list" : "edit");
@@ -860,8 +845,8 @@
       document.getElementById("tabEdit").classList.toggle("on", !list);
       document.getElementById("pageTitle").textContent = list ? "Kaydettiğiniz evler" : (els.title.value.trim() || "Yeni ev");
       document.getElementById("pageLead").textContent = list
-        ? "Aile aynı listeyi görür. Biriniz kaydedince diğer cihazlarda da çıkar."
-        : "Başlık, ilan ve oda tipini yazıp kaydedin.";
+        ? "Bir eve dokunun, hesabı açılsın."
+        : "Evin fiyatını gir, masraflar ve taksitler anında çıksın.";
     };
 
     const renderList = () => {
@@ -932,7 +917,8 @@
       saveHomes(homes);
       renderList();
       toast("Kaydedildi");
-      document.getElementById("pageTitle").textContent = home.title;
+      fillForm({ cash: home.cash });
+      showView("edit");
     };
 
     document.getElementById("homeList").addEventListener("click", (e) => {
