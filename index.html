@@ -589,12 +589,12 @@
       <button type="button" id="tabList">Kayıtlı evler</button>
     </div>
 
-    <section id="listView">
+    <section id="listView" class="hidden">
       <div id="homeList"></div>
       <button class="btn primary" type="button" id="btnAddFromList" style="width:100%;margin-bottom:14px">Yeni ev ekle</button>
     </section>
 
-    <section id="editView" class="hidden">
+    <section id="editView">
       <section class="card">
         <label class="label" for="price">Evin fiyatı</label>
         <div class="money-row">
@@ -612,6 +612,16 @@
       </section>
 
       <section class="card">
+        <span class="label">Alım-satım vergisi</span>
+        <div class="seg two" role="radiogroup" aria-label="Vergi">
+          <input type="radio" name="tax" id="t2" value="0.02" />
+          <label for="t2">%2</label>
+          <input type="radio" name="tax" id="t4" value="0.04" checked />
+          <label for="t4">%4</label>
+        </div>
+      </section>
+
+      <section class="card">
         <span class="label">Emlakçı komisyonu</span>
         <div class="seg" role="radiogroup" aria-label="Komisyon">
           <input type="radio" name="comm" id="c0" value="0" />
@@ -621,7 +631,7 @@
           <input type="radio" name="comm" id="c4" value="0.04" />
           <label for="c4">%4</label>
         </div>
-        <p class="hint">Sahibinden seçilince komisyon 0 olur. Alım-satım vergisi her durumda %4.</p>
+        <p class="hint">Sahibinden seçilince komisyon 0 olur.</p>
       </section>
 
       <section class="card">
@@ -660,7 +670,7 @@
         <span class="label">Maliyet kırılımı</span>
         <div class="rows">
           <div class="row"><span>Ev fiyatı</span><b id="rPrice">—</b></div>
-          <div class="row"><span>Alım-satım vergisi %4</span><b id="rTax">—</b></div>
+          <div class="row"><span id="rTaxLabel">Alım-satım vergisi</span><b id="rTax">—</b></div>
           <div class="row"><span id="rCommLabel">Emlakçı komisyonu</span><b id="rComm">—</b></div>
           <div class="row"><span>Taşınma + badana</span><b>120.000 TL</b></div>
           <div class="row"><span>Eksper</span><b>33.000 TL</b></div>
@@ -740,7 +750,7 @@
         <span class="label">Maliyet kırılımı</span>
         <div class="rows">
           <div class="row"><span>Ev fiyatı</span><b id="pvPrice">—</b></div>
-          <div class="row"><span>Alım-satım vergisi %4</span><b id="pvTax">—</b></div>
+          <div class="row"><span id="pvTaxLabel">Alım-satım vergisi</span><b id="pvTax">—</b></div>
           <div class="row"><span id="pvCommLabel">Emlakçı komisyonu</span><b id="pvComm">—</b></div>
           <div class="row"><span>Taşınma + badana</span><b>120.000 TL</b></div>
           <div class="row"><span>Eksper</span><b>33.000 TL</b></div>
@@ -753,7 +763,6 @@
   <script>
     const MOVE = 120_000;
     const EXPERT = 33_000;
-    const TAX = 0.04;
     const KEY = "tasinma.homes.v1";
 
     const els = {
@@ -770,6 +779,7 @@
       tot120: document.getElementById("tot120"),
       rPrice: document.getElementById("rPrice"),
       rTax: document.getElementById("rTax"),
+      rTaxLabel: document.getElementById("rTaxLabel"),
       rComm: document.getElementById("rComm"),
       rCommLabel: document.getElementById("rCommLabel"),
       rTotal: document.getElementById("rTotal"),
@@ -889,7 +899,7 @@
 
       fillForm(null);
       renderList();
-      showView(homesCache.length ? "list" : "edit");
+      showView("edit");
     };
 
     document.addEventListener("visibilitychange", () => {
@@ -911,18 +921,21 @@
       if (el) el.checked = true;
     };
 
+    const taxRateOf = (home) => (Number(home.taxRate) === 0.02 ? 0.02 : 0.04);
+
     const figures = (home) => {
       const price = home.price;
       const cash = home.cash;
       const commRate = Number(home.comm);
       const rate = Number(home.rate);
-      const tax = price * TAX;
+      const taxRate = taxRateOf(home);
+      const tax = price * taxRate;
       const comm = price * commRate;
       const total = price + tax + comm + MOVE + EXPERT;
       const loan = total - cash;
       return {
         ...home,
-        tax, comm, total, loan,
+        taxRate, tax, comm, total, loan,
         pay60: installment(Math.max(loan, 0), rate, 60),
         pay120: installment(Math.max(loan, 0), rate, 120),
       };
@@ -934,6 +947,7 @@
         cash: parseTR(els.cash.value),
         comm: Number(checked("comm").value),
         rate: Number(checked("rate").value),
+        taxRate: Number(checked("tax").value),
       });
       lastCalc = data;
 
@@ -942,6 +956,7 @@
       els.cashOut.textContent = fmt(data.cash);
       els.rPrice.textContent = fmt(data.price);
       els.rTax.textContent = fmt(data.tax);
+      els.rTaxLabel.textContent = `Alım-satım vergisi %${data.taxRate * 100}`;
       els.rComm.textContent = fmt(data.comm);
       els.rCommLabel.textContent =
         data.comm === 0 ? "Emlakçı (sahibinden)" : `Emlakçı komisyonu %${Number(checked("comm").value) * 100}`;
@@ -1049,6 +1064,7 @@
       price: parseTR(els.price.value),
       cash: parseTR(els.cash.value),
       comm: Number(checked("comm").value),
+      taxRate: Number(checked("tax").value),
       rate: Number(checked("rate").value),
       savedAt: Date.now(),
     });
@@ -1071,6 +1087,7 @@
       document.getElementById("pvTot120").textContent = d.loan > 0 ? `Toplam geri ödeme ${fmt(d.pay120 * 120)}` : "";
       document.getElementById("pvPrice").textContent = fmt(d.price);
       document.getElementById("pvTax").textContent = fmt(d.tax);
+      document.getElementById("pvTaxLabel").textContent = `Alım-satım vergisi %${d.taxRate * 100}`;
       document.getElementById("pvComm").textContent = fmt(d.comm);
       document.getElementById("pvCommLabel").textContent =
         Number(home.comm) === 0 ? "Emlakçı (sahibinden)" : `Emlakçı komisyonu %${Number(home.comm) * 100}`;
@@ -1093,6 +1110,7 @@
       els.cash.value = new Intl.NumberFormat("tr-TR").format(h?.cash || 7_700_000);
       setRadio("rooms", h?.rooms === "3+1" ? "3+1" : "2+1");
       setRadio("comm", h?.comm ?? 0.02);
+      setRadio("tax", taxRateOf(h || {}));
       setRadio("rate", h?.rate ?? 0.0288);
       calc();
     };
@@ -1158,7 +1176,7 @@
     });
 
     ["title", "link"].forEach((id) => els[id].addEventListener("input", calc));
-    document.querySelectorAll('input[name="comm"], input[name="rate"], input[name="rooms"]').forEach((el) => {
+    document.querySelectorAll('input[name="comm"], input[name="rate"], input[name="rooms"], input[name="tax"]').forEach((el) => {
       el.addEventListener("change", calc);
     });
 
