@@ -612,6 +612,15 @@
       </section>
 
       <section class="card">
+        <label class="label" for="reno">Tadilat masrafı</label>
+        <div class="money-row">
+          <input id="reno" class="money" type="text" inputmode="numeric" value="" autocomplete="off" />
+          <span>TL</span>
+        </div>
+        <p class="hint">Vergi ve emlakçı komisyonuna girmez; toplam maliyete ve krediye eklenir.</p>
+      </section>
+
+      <section class="card">
         <span class="label">Alım-satım vergisi</span>
         <div class="seg two" role="radiogroup" aria-label="Vergi">
           <input type="radio" name="tax" id="t2" value="0.02" />
@@ -674,6 +683,7 @@
           <div class="row"><span id="rCommLabel">Emlakçı komisyonu</span><b id="rComm">—</b></div>
           <div class="row"><span>Taşınma + badana</span><b>120.000 TL</b></div>
           <div class="row"><span>Eksper + sigortalar</span><b>55.000 TL</b></div>
+          <div class="row"><span>Tadilat</span><b id="rReno">—</b></div>
           <div class="row total"><span>Toplam</span><b id="rTotal">—</b></div>
         </div>
         <p class="warn" id="warn" hidden></p>
@@ -754,6 +764,7 @@
           <div class="row"><span id="pvCommLabel">Emlakçı komisyonu</span><b id="pvComm">—</b></div>
           <div class="row"><span>Taşınma + badana</span><b>120.000 TL</b></div>
           <div class="row"><span>Eksper + sigortalar</span><b>55.000 TL</b></div>
+          <div class="row"><span>Tadilat</span><b id="pvReno">—</b></div>
           <div class="row total"><span>Toplam</span><b id="pvSum">—</b></div>
         </div>
       </section>
@@ -768,6 +779,7 @@
     const els = {
       price: document.getElementById("price"),
       cash: document.getElementById("cash"),
+      reno: document.getElementById("reno"),
       title: document.getElementById("title"),
       link: document.getElementById("link"),
       loan: document.getElementById("loan"),
@@ -781,6 +793,7 @@
       rTax: document.getElementById("rTax"),
       rTaxLabel: document.getElementById("rTaxLabel"),
       rComm: document.getElementById("rComm"),
+      rReno: document.getElementById("rReno"),
       rCommLabel: document.getElementById("rCommLabel"),
       rTotal: document.getElementById("rTotal"),
       warn: document.getElementById("warn"),
@@ -928,14 +941,15 @@
       const cash = home.cash;
       const commRate = Number(home.comm);
       const rate = Number(home.rate);
+      const reno = Number(home.reno) || 0;
       const taxRate = taxRateOf(home);
       const tax = price * taxRate;
       const comm = price * commRate;
-      const total = price + tax + comm + MOVE + EXPERT;
+      const total = price + tax + comm + MOVE + EXPERT + reno;
       const loan = total - cash;
       return {
         ...home,
-        taxRate, tax, comm, total, loan,
+        taxRate, tax, comm, reno, total, loan,
         pay60: installment(Math.max(loan, 0), rate, 60),
         pay120: installment(Math.max(loan, 0), rate, 120),
       };
@@ -946,6 +960,7 @@
         price: parseTR(els.price.value),
         cash: parseTR(els.cash.value),
         comm: Number(checked("comm").value),
+        reno: parseTR(els.reno.value),
         rate: Number(checked("rate").value),
         taxRate: Number(checked("tax").value),
       });
@@ -958,6 +973,7 @@
       els.rTax.textContent = fmt(data.tax);
       els.rTaxLabel.textContent = `Alım-satım vergisi %${data.taxRate * 100}`;
       els.rComm.textContent = fmt(data.comm);
+      els.rReno.textContent = fmt(data.reno);
       els.rCommLabel.textContent =
         data.comm === 0 ? "Emlakçı (sahibinden)" : `Emlakçı komisyonu %${Number(checked("comm").value) * 100}`;
       els.rTotal.textContent = fmt(data.total);
@@ -1063,6 +1079,7 @@
       rooms: checked("rooms").value,
       price: parseTR(els.price.value),
       cash: parseTR(els.cash.value),
+      reno: parseTR(els.reno.value),
       comm: Number(checked("comm").value),
       taxRate: Number(checked("tax").value),
       rate: Number(checked("rate").value),
@@ -1089,6 +1106,7 @@
       document.getElementById("pvTax").textContent = fmt(d.tax);
       document.getElementById("pvTaxLabel").textContent = `Alım-satım vergisi %${d.taxRate * 100}`;
       document.getElementById("pvComm").textContent = fmt(d.comm);
+      document.getElementById("pvReno").textContent = fmt(d.reno);
       document.getElementById("pvCommLabel").textContent =
         Number(home.comm) === 0 ? "Emlakçı (sahibinden)" : `Emlakçı komisyonu %${Number(home.comm) * 100}`;
       document.getElementById("pvSum").textContent = fmt(d.total);
@@ -1108,6 +1126,7 @@
       els.link.value = h?.link || "";
       els.price.value = h?.price ? new Intl.NumberFormat("tr-TR").format(h.price) : "";
       els.cash.value = new Intl.NumberFormat("tr-TR").format(h?.cash || 7_700_000);
+      els.reno.value = h?.reno ? new Intl.NumberFormat("tr-TR").format(h.reno) : "";
       setRadio("rooms", h?.rooms === "3+1" ? "3+1" : "2+1");
       setRadio("comm", h?.comm ?? 0.02);
       setRadio("tax", taxRateOf(h || {}));
@@ -1169,7 +1188,7 @@
     document.getElementById("btnNew").onclick = newHome;
     document.getElementById("btnAddFromList").onclick = newHome;
 
-    ["price", "cash"].forEach((id) => {
+    ["price", "cash", "reno"].forEach((id) => {
       const el = els[id];
       el.addEventListener("input", () => { formatInput(el); calc(); });
       formatInput(el);
