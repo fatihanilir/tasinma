@@ -9,6 +9,7 @@ class HomeListCard extends StatelessWidget {
   final HomeModel home;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final VoidCallback? onEdit;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
   final bool isFirst;
@@ -19,6 +20,7 @@ class HomeListCard extends StatelessWidget {
     required this.home,
     required this.onTap,
     required this.onDelete,
+    this.onEdit,
     this.onMoveUp,
     this.onMoveDown,
     this.isFirst = false,
@@ -81,6 +83,13 @@ class HomeListCard extends StatelessWidget {
                     // Aksiyon butonları
                     Row(
                       children: [
+                        if (onEdit != null) ...[
+                          _MiniButton(
+                            label: 'Düzenle',
+                            onTap: onEdit!,
+                          ),
+                          const SizedBox(width: 8),
+                        ],
                         if (home.link.isNotEmpty &&
                             home.link.startsWith('http'))
                           _MiniButton(

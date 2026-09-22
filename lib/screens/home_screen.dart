@@ -84,6 +84,14 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _currentTab = 0);
   }
 
+  void _onEditHome(String homeId) {
+    final provider = context.read<HomesProvider>();
+    final home = provider.homes.firstWhere((h) => h.id == homeId);
+    provider.selectHomeForEdit(home);
+    setState(() => _currentTab = 0);
+    _showToast('Düzenleme modu');
+  }
+
   Future<void> _onSignOut() async {
     await context.read<AuthProvider>().signOut();
     context.read<HomesProvider>().setCloudMode(false);
@@ -269,6 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           )
                         : SavedHomesScreen(
                             onAddNew: _onAddFromList,
+                            onEditHome: _onEditHome,
                           ),
                   ),
                 ],

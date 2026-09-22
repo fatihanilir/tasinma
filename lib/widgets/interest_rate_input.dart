@@ -54,7 +54,13 @@ class _InterestRateInputState extends State<InterestRateInput> {
     setState(() {
       _isEditing = _focusNode.hasFocus;
     });
-    if (!_focusNode.hasFocus) {
+    if (_focusNode.hasFocus) {
+      // Odaklanınca tüm metni seç — silmek kolay olsun
+      _controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _controller.text.length,
+      );
+    } else {
       _applyManualInput();
     }
   }
@@ -259,12 +265,17 @@ class _AutoCommaFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     final text = newValue.text;
-    
+
+    // Silme sırasında otomatik virgül ekleme (geri tuşu bozulmasın)
+    if (newValue.text.length < oldValue.text.length) {
+      return newValue;
+    }
+
     // Boş veya zaten virgül varsa dokunma
     if (text.isEmpty || text.contains(',') || text.contains('.')) {
       return newValue;
     }
-    
+
     // Tek rakam girilmişse ve 0-5 arasıysa virgül ekle
     if (text.length == 1 && RegExp(r'^[0-5]$').hasMatch(text)) {
       return TextEditingValue(
@@ -272,7 +283,7 @@ class _AutoCommaFormatter extends TextInputFormatter {
         selection: const TextSelection.collapsed(offset: 2),
       );
     }
-    
+
     return newValue;
   }
 }

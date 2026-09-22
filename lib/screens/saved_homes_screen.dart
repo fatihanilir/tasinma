@@ -8,10 +8,12 @@ import 'home_detail_sheet.dart';
 
 class SavedHomesScreen extends StatelessWidget {
   final VoidCallback onAddNew;
+  final void Function(String homeId)? onEditHome;
 
   const SavedHomesScreen({
     super.key,
     required this.onAddNew,
+    this.onEditHome,
   });
 
   void _showHomeDetail(BuildContext context, String homeId) {
@@ -87,6 +89,9 @@ class SavedHomesScreen extends StatelessWidget {
                             isFirst: index == 1,
                             isLast: index == homes.length,
                             onTap: () => _showHomeDetail(context, home.id),
+                            onEdit: onEditHome != null
+                                ? () => onEditHome!(home.id)
+                                : null,
                             onDelete: () => _confirmDelete(
                               context,
                               home.id,

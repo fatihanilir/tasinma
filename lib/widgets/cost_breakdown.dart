@@ -261,59 +261,245 @@ class _CostBreakdownState extends State<CostBreakdown> {
   }
 
   void _showEditCostDialog(CostItem cost) {
-    final controller = TextEditingController(
-      text: Formatters.formatNumber(cost.amount),
-    );
-
-    void formatInput() {
-      final text = controller.text;
-      final formatted = Formatters.formatInputValue(text);
-      if (formatted != text) {
-        controller.value = TextEditingValue(
-          text: formatted,
-          selection: TextSelection.collapsed(offset: formatted.length),
-        );
-      }
-    }
-
-    void submitForm(BuildContext ctx) {
-      final amount = Formatters.parseNumber(controller.text);
-      widget.onUpdateCostAmount?.call(cost.id, amount);
-      Navigator.pop(ctx);
-    }
-
-    showDialog(
+    _showAmountSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(cost.name),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(
-            labelText: 'Tutar (TL)',
-            border: OutlineInputBorder(),
-          ),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
-          ],
-          onChanged: (_) => formatInput(),
-          onSubmitted: (_) => submitForm(ctx),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () => submitForm(ctx),
-            child: const Text('Kaydet'),
-          ),
-        ],
-      ),
+      title: cost.name,
+      initialAmount: cost.amount,
+      confirmLabel: 'Kaydet',
+      onConfirm: (amount) {
+        widget.onUpdateCostAmount?.call(cost.id, amount);
+      },
     );
   }
+}
+
+void _showAmountSheet({
+  required BuildContext context,
+  required String title,
+  double? initialAmount,
+  String confirmLabel = 'Ekle',
+  required ValueChanged<double> onConfirm,
+}) {
+  final amountController = TextEditingController(
+    text: initialAmount != null && initialAmount > 0
+        ? Formatters.formatNumber(initialAmount)
+        : '',
+  );
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFFDF8),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.line,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: GoogleFonts.fraunces(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.forest,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  autofocus: true,
+                  textInputAction: TextInputAction.done,
+                  scrollPadding: const EdgeInsets.only(bottom: 120),
+                  decoration: const InputDecoration(
+                    labelText: 'Tutar (TL)',
+                    border: OutlineInputBorder(),
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+                  ],
+                  onChanged: (_) {
+                    final text = amountController.text;
+                    final formatted = Formatters.formatInputValue(text);
+                    if (formatted != text) {
+                      amountController.value = TextEditingValue(
+                        text: formatted,
+                        selection:
+                            TextSelection.collapsed(offset: formatted.length),
+                      );
+                    }
+                  },
+                  onSubmitted: (_) {
+                    final amount = Formatters.parseNumber(amountController.text);
+                    if (amount <= 0) return;
+                    onConfirm(amount);
+                    Navigator.pop(ctx);
+                  },
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('İptal'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final amount =
+                              Formatters.parseNumber(amountController.text);
+                          if (amount <= 0) return;
+                          onConfirm(amount);
+                          Navigator.pop(ctx);
+                        },
+                        child: Text(confirmLabel),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+void _showCustomCostSheet({
+  required BuildContext context,
+  required void Function(String name, double amount) onConfirm,
+}) {
+  final nameController = TextEditingController();
+  final amountController = TextEditingController();
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFFDF8),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.line,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Özel Maliyet Ekle',
+                  style: GoogleFonts.fraunces(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.forest,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameController,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Maliyet adı',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  scrollPadding: const EdgeInsets.only(bottom: 120),
+                  decoration: const InputDecoration(
+                    labelText: 'Tutar (TL)',
+                    border: OutlineInputBorder(),
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+                  ],
+                  onChanged: (_) {
+                    final text = amountController.text;
+                    final formatted = Formatters.formatInputValue(text);
+                    if (formatted != text) {
+                      amountController.value = TextEditingValue(
+                        text: formatted,
+                        selection:
+                            TextSelection.collapsed(offset: formatted.length),
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('İptal'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final name = nameController.text.trim();
+                          final amount =
+                              Formatters.parseNumber(amountController.text);
+                          if (name.isEmpty || amount <= 0) return;
+                          onConfirm(name, amount);
+                          Navigator.pop(ctx);
+                        },
+                        child: const Text('Ekle'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class _CostRow extends StatelessWidget {
@@ -351,10 +537,17 @@ class _CostRow extends StatelessWidget {
               onTap: onEdit,
               child: Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: Icon(
-                  Icons.edit_outlined,
-                  size: 16,
-                  color: AppColors.muted.withOpacity(0.6),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.goldSoft,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.edit_outlined,
+                    size: 16,
+                    color: AppColors.forest,
+                  ),
                 ),
               ),
             ),
@@ -487,80 +680,19 @@ class _QuickCostOptions extends StatelessWidget {
   }
 
   void _showAmountDialog(BuildContext context, CostTemplate template) {
-    final controller = TextEditingController();
-
-    void formatInput() {
-      final text = controller.text;
-      final formatted = Formatters.formatInputValue(text);
-      if (formatted != text) {
-        controller.value = TextEditingValue(
-          text: formatted,
-          selection: TextSelection.collapsed(offset: formatted.length),
-        );
-      }
-    }
-
-    void submitForm(BuildContext ctx) {
-      final amount = Formatters.parseNumber(controller.text);
-      if (amount > 0) {
-        onAddCost?.call(template.toCostItem(amount: amount));
-      }
-      Navigator.pop(ctx);
-    }
-
-    showDialog(
+    _showAmountSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(template.name),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(
-            labelText: 'Tutar (TL)',
-            border: OutlineInputBorder(),
-          ),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
-          ],
-          onChanged: (_) => formatInput(),
-          onSubmitted: (_) => submitForm(ctx),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () => submitForm(ctx),
-            child: const Text('Ekle'),
-          ),
-        ],
-      ),
+      title: template.name,
+      onConfirm: (amount) {
+        onAddCost?.call(template.toCostItem(amount: amount));
+      },
     );
   }
 
   void _showCustomCostDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final amountController = TextEditingController();
-    final amountFocusNode = FocusNode();
-
-    void formatAmountInput() {
-      final text = amountController.text;
-      final formatted = Formatters.formatInputValue(text);
-      if (formatted != text) {
-        amountController.value = TextEditingValue(
-          text: formatted,
-          selection: TextSelection.collapsed(offset: formatted.length),
-        );
-      }
-    }
-
-    void submitForm(BuildContext ctx) {
-      final name = nameController.text.trim();
-      final amount = Formatters.parseNumber(amountController.text);
-      if (name.isNotEmpty && amount > 0) {
+    _showCustomCostSheet(
+      context: context,
+      onConfirm: (name, amount) {
         final customId = 'custom_${DateTime.now().millisecondsSinceEpoch}';
         onAddCost?.call(CostItem(
           id: customId,
@@ -568,55 +700,7 @@ class _QuickCostOptions extends StatelessWidget {
           amount: amount,
           category: CostCategory.other,
         ));
-      }
-      Navigator.pop(ctx);
-    }
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Özel Maliyet Ekle'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Maliyet adı',
-                border: OutlineInputBorder(),
-              ),
-              onSubmitted: (_) => amountFocusNode.requestFocus(),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: amountController,
-              focusNode: amountFocusNode,
-              keyboardType: TextInputType.number,
-              textInputAction: TextInputAction.done,
-              decoration: const InputDecoration(
-                labelText: 'Tutar (TL)',
-                border: OutlineInputBorder(),
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
-              ],
-              onChanged: (_) => formatAmountInput(),
-              onSubmitted: (_) => submitForm(ctx),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () => submitForm(ctx),
-            child: const Text('Ekle'),
-          ),
-        ],
-      ),
+      },
     );
   }
 }
