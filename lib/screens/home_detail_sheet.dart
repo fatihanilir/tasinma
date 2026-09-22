@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/home_model.dart';
 import '../theme/app_theme.dart';
 import '../widgets/hero_card.dart';
@@ -10,6 +11,12 @@ class HomeDetailSheet extends StatelessWidget {
   final HomeModel home;
 
   const HomeDetailSheet({super.key, required this.home});
+
+  Future<void> _openLink() async {
+    final uri = Uri.tryParse(home.normalizedLink);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +37,6 @@ class HomeDetailSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
             child: Row(
@@ -52,12 +58,7 @@ class HomeDetailSheet extends StatelessWidget {
                       if (home.hasLink) ...[
                         const SizedBox(height: 8),
                         GestureDetector(
-                          onTap: () async {
-                            final uri = Uri.tryParse(home.normalizedLink);
-                            if (uri != null) {
-                              // ignore: use_build_context_synchronously
-                            }
-                          },
+                          onTap: _openLink,
                           child: Text(
                             home.normalizedLink,
                             style: GoogleFonts.outfit(
@@ -97,14 +98,11 @@ class HomeDetailSheet extends StatelessWidget {
               ],
             ),
           ),
-
-          // Content
           Flexible(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + bottomPadding),
               child: Column(
                 children: [
-                  // Hero kart
                   HeroCard(
                     loanAmount: home.loanAmount,
                     totalCost: home.totalCost,
@@ -112,8 +110,6 @@ class HomeDetailSheet extends StatelessWidget {
                     hasValidInput: home.hasValidInput,
                   ),
                   const SizedBox(height: 14),
-
-                  // Ödeme planları
                   PaymentCardsRow(
                     term1: home.term1,
                     term2: home.term2,
@@ -124,8 +120,6 @@ class HomeDetailSheet extends StatelessWidget {
                     needsLoan: home.needsLoan,
                   ),
                   const SizedBox(height: 14),
-
-                  // Maliyet kırılımı
                   CostBreakdown(home: home),
                 ],
               ),
