@@ -49,6 +49,25 @@ class HomeDetailSheet extends StatelessWidget {
                           color: AppColors.forest,
                         ),
                       ),
+                      if (home.hasLink) ...[
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: () async {
+                            final uri = Uri.tryParse(home.normalizedLink);
+                            if (uri != null) {
+                              // ignore: use_build_context_synchronously
+                            }
+                          },
+                          child: Text(
+                            home.normalizedLink,
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              color: AppColors.forest2,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

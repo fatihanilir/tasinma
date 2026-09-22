@@ -28,11 +28,11 @@ class HomeListCard extends StatelessWidget {
   });
 
   Future<void> _openLink() async {
-    if (home.link.isEmpty) return;
-    final uri = Uri.tryParse(home.link);
-    if (uri != null && await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+    final link = home.normalizedLink;
+    if (link.isEmpty) return;
+    final uri = Uri.tryParse(link);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -43,75 +43,86 @@ class HomeListCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Ana içerik
             Expanded(
-              child: GestureDetector(
-                onTap: onTap,
-                behavior: HitTestBehavior.opaque,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Başlık
-                    Text(
-                      home.displayTitle,
-                      style: GoogleFonts.fraunces(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.02 * 20,
-                        color: AppColors.forest,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Meta bilgiler
-                    Text(
-                      '${Formatters.formatTL(home.price)} · kredi ${home.needsLoan ? Formatters.formatTL(home.loanAmount) : "yok"}',
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        color: AppColors.muted,
-                        height: 1.45,
-                      ),
-                    ),
-                    Text(
-                      '60 ay ${home.needsLoan ? Formatters.formatTL(home.payment60) : "—"} · 120 ay ${home.needsLoan ? Formatters.formatTL(home.payment120) : "—"}',
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        color: AppColors.muted,
-                        height: 1.45,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    // Aksiyon butonları
-                    Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                    onTap: onTap,
+                    behavior: HitTestBehavior.opaque,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (onEdit != null) ...[
-                          _MiniButton(
-                            label: 'Düzenle',
-                            onTap: onEdit!,
+                        Text(
+                          home.displayTitle,
+                          style: GoogleFonts.fraunces(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.02 * 20,
+                            color: AppColors.forest,
                           ),
-                          const SizedBox(width: 8),
-                        ],
-                        if (home.link.isNotEmpty &&
-                            home.link.startsWith('http'))
-                          _MiniButton(
-                            label: 'İlan',
-                            onTap: _openLink,
-                          ),
-                        if (home.link.isNotEmpty &&
-                            home.link.startsWith('http'))
-                          const SizedBox(width: 8),
-                        _MiniButton(
-                          label: 'Sil',
-                          isDanger: true,
-                          onTap: onDelete,
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${Formatters.formatTL(home.price)} · kredi ${home.needsLoan ? Formatters.formatTL(home.loanAmount) : "yok"}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            color: AppColors.muted,
+                            height: 1.45,
+                          ),
+                        ),
+                        Text(
+                          '${home.term1} ay ${home.needsLoan ? Formatters.formatTL(home.paymentTerm1) : "—"} · ${home.term2} ay ${home.needsLoan ? Formatters.formatTL(home.paymentTerm2) : "—"}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            color: AppColors.muted,
+                            height: 1.45,
+                          ),
+                        ),
+                        if (home.hasLink) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            home.normalizedLink,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              color: AppColors.forest2,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      if (onEdit != null) ...[
+                        _MiniButton(
+                          label: 'Düzenle',
+                          onTap: onEdit!,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      if (home.hasLink) ...[
+                        _MiniButton(
+                          label: 'İlan',
+                          onTap: _openLink,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      _MiniButton(
+                        label: 'Sil',
+                        isDanger: true,
+                        onTap: onDelete,
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
             const SizedBox(width: 8),
-            // Sıralama butonları
             Column(
               children: [
                 _RankButton(

@@ -173,4 +173,17 @@ class HomeModel {
       );
 
   String get displayTitle => title.isNotEmpty ? title : 'İsimsiz ev';
+
+  /// İlan linkini tarayıcıda açılabilir hale getirir.
+  String get normalizedLink {
+    final trimmed = link.trim();
+    if (trimmed.isEmpty) return '';
+    final lower = trimmed.toLowerCase();
+    if (lower.startsWith('http://') || lower.startsWith('https://')) {
+      return trimmed;
+    }
+    return 'https://$trimmed';
+  }
+
+  bool get hasLink => normalizedLink.isNotEmpty;
 }

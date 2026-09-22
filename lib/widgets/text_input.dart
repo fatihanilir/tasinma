@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
-class TextInputCard extends StatelessWidget {
+class TextInputCard extends StatefulWidget {
   final String label;
   final String value;
   final ValueChanged<String> onChanged;
@@ -23,6 +23,36 @@ class TextInputCard extends StatelessWidget {
   });
 
   @override
+  State<TextInputCard> createState() => _TextInputCardState();
+}
+
+class _TextInputCardState extends State<TextInputCard> {
+  late TextEditingController _controller;
+  late FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+    _focusNode = FocusNode();
+  }
+
+  @override
+  void didUpdateWidget(TextInputCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != _controller.text && !_focusNode.hasFocus) {
+      _controller.text = widget.value;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
@@ -31,17 +61,18 @@ class TextInputCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              label.toUpperCase(),
+              widget.label.toUpperCase(),
               style: Theme.of(context).textTheme.labelMedium,
             ),
             const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
-                    initialValue: value,
-                    onChanged: onChanged,
-                    keyboardType: keyboardType,
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    onChanged: widget.onChanged,
+                    keyboardType: widget.keyboardType,
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
@@ -51,7 +82,7 @@ class TextInputCard extends StatelessWidget {
                       border: InputBorder.none,
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
-                      hintText: placeholder,
+                      hintText: widget.placeholder,
                       hintStyle: GoogleFonts.outfit(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
@@ -60,17 +91,17 @@ class TextInputCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (trailing != null) trailing!,
+                if (widget.trailing != null) widget.trailing!,
               ],
             ),
             Container(
               height: 1.5,
               color: AppColors.forest,
             ),
-            if (hint != null) ...[
+            if (widget.hint != null) ...[
               const SizedBox(height: 8),
               Text(
-                hint!,
+                widget.hint!,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],

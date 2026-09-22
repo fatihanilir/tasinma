@@ -151,6 +151,11 @@ class HomesProvider extends ChangeNotifier {
         );
       }
 
+      // İlan linkini normalize et (https ekle)
+      if (homeToSave.link.trim().isNotEmpty) {
+        homeToSave = homeToSave.copyWith(link: homeToSave.normalizedLink);
+      }
+
       final newOrder = _currentHome != null ? _currentHome!.order : 0;
 
       if (_currentHome == null) {
