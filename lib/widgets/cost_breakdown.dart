@@ -286,22 +286,28 @@ void _showAmountSheet({
         ? Formatters.formatNumber(initialAmount)
         : '',
   );
+  final focusNode = FocusNode();
 
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (ctx) {
-      // iOS Safari'de viewInsets yanlış değer döndürebiliyor
-      // Web'de tarayıcı zaten klavyeyi yönetiyor, ekstra padding eklemeyelim
-      final bottomInset = kIsWeb ? 0.0 : MediaQuery.viewInsetsOf(ctx).bottom;
+      // Bottom sheet açıldıktan sonra focus ver (klavye gecikmeli açılsın)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (focusNode.canRequestFocus) {
+            focusNode.requestFocus();
+          }
+        });
+      });
       
       return Container(
         decoration: const BoxDecoration(
           color: Color(0xFFFFFDF8),
           borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
         ),
-        padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + bottomInset),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         child: SafeArea(
           top: false,
           child: Column(
@@ -330,8 +336,8 @@ void _showAmountSheet({
               const SizedBox(height: 16),
               TextField(
                 controller: amountController,
+                focusNode: focusNode,
                 keyboardType: TextInputType.number,
-                autofocus: true,
                 textInputAction: TextInputAction.done,
                 decoration: const InputDecoration(
                   labelText: 'Tutar (TL)',
@@ -387,7 +393,7 @@ void _showAmountSheet({
         ),
       );
     },
-  );
+  ).whenComplete(() => focusNode.dispose());
 }
 
 void _showCustomCostSheet({
