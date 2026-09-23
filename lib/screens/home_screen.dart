@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/homes_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/page_reload.dart';
 import 'auth_screen.dart';
 import 'calculator_screen.dart';
 import 'saved_homes_screen.dart';
@@ -90,6 +91,11 @@ class _HomeScreenState extends State<HomeScreen> {
     provider.selectHomeForEdit(home);
     setState(() => _currentTab = 0);
     _showToast('Düzenleme modu');
+  }
+
+  Future<void> _onRefresh() async {
+    if (reloadPage()) return;
+    await context.read<HomesProvider>().refresh();
   }
 
   Future<void> _onSignOut() async {
@@ -273,15 +279,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   // Content
                   Expanded(
-                    child: _currentTab == 0
-                        ? CalculatorScreen(
-                            onSave: _onSave,
-                            onNew: _onNew,
-                          )
-                        : SavedHomesScreen(
-                            onAddNew: _onAddFromList,
-                            onEditHome: _onEditHome,
-                          ),
+                    child: RefreshIndicator(
+                      color: AppColors.forest,
+                      backgroundColor: AppColors.white,
+                      onRefresh: _onRefresh,
+                      child: _currentTab == 0
+                          ? CalculatorScreen(
+                              onSave: _onSave,
+                              onNew: _onNew,
+                            )
+                          : SavedHomesScreen(
+                              onAddNew: _onAddFromList,
+                              onEditHome: _onEditHome,
+                            ),
+                    ),
                   ),
                 ],
               ),

@@ -58,6 +58,15 @@ class HomesProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> refresh() async {
+    stopListening();
+    if (_useCloud) {
+      startListening();
+    } else {
+      await _loadFromLocalStorage();
+    }
+  }
+
   void stopListening() {
     _homesSub?.cancel();
     _homesSub = null;

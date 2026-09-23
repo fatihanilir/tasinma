@@ -14,6 +14,8 @@ class HomeListCard extends StatelessWidget {
   final VoidCallback? onMoveDown;
   final bool isFirst;
   final bool isLast;
+  final bool selectionMode;
+  final bool isSelected;
 
   const HomeListCard({
     super.key,
@@ -25,6 +27,8 @@ class HomeListCard extends StatelessWidget {
     this.onMoveDown,
     this.isFirst = false,
     this.isLast = false,
+    this.selectionMode = false,
+    this.isSelected = false,
   });
 
   Future<void> _openLink() async {
@@ -37,6 +41,8 @@ class HomeListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (selectionMode) return _buildSelectable();
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -137,6 +143,76 @@ class HomeListCard extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectable() {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: isSelected ? AppColors.forest : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        home.displayTitle,
+                        style: GoogleFonts.fraunces(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.02 * 20,
+                          color: AppColors.forest,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Toplam ${Formatters.formatTL(home.totalCost)} · kredi ${home.needsLoan ? Formatters.formatTL(home.loanAmount) : "yok"}',
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          color: AppColors.muted,
+                          height: 1.45,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected ? AppColors.forest : Colors.white,
+                    border: Border.all(
+                      color: isSelected ? AppColors.forest : AppColors.line,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: isSelected
+                      ? const Icon(Icons.check,
+                          size: 16, color: AppColors.white)
+                      : null,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

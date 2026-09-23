@@ -41,6 +41,7 @@ class CalculatorScreen extends StatelessWidget {
           children: [
             Expanded(
               child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(18, 0, 18, 100),
                 child: Column(
                   children: [
