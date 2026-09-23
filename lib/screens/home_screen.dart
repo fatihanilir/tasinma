@@ -113,6 +113,35 @@ class _HomeScreenState extends State<HomeScreen> {
     _showToast('Düzenleme modu');
   }
 
+  static const double _pullThreshold = 80;
+  double _pull = 0;
+  bool _pulling = false;
+  bool _refreshing = false;
+
+  void _onPullStart() {
+    if (_refreshing) return;
+    setState(() => _pulling = true);
+  }
+
+  void _onPullUpdate(double dy) {
+    if (_refreshing) return;
+    // Yarı hızda uzasın; çekme hissi versin.
+    setState(() => _pull = (_pull + dy * 0.5).clamp(0.0, 110.0));
+  }
+
+  Future<void> _onPullEnd() async {
+    if (_refreshing) return;
+    final trigger = _pull >= _pullThreshold;
+    setState(() {
+      _pulling = false;
+      _pull = 0;
+      _refreshing = trigger;
+    });
+    if (!trigger) return;
+    await _onRefresh();
+    if (mounted) setState(() => _refreshing = false);
+  }
+
   Future<void> _onRefresh() async {
     if (reloadPage()) return;
     await context.read<HomesProvider>().refresh();
@@ -125,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String? get _pageLead {
     if (_currentTab == 1) return null;
-    return 'İlan fiyatını gir; vergi, komisyon ve kredi dahil evin sana gerçek maliyetini görelim.';
+    return 'İlandaki fiyatı değil, evin gerçek maliyetini hesaplayalım.';
   }
 
   @override
@@ -146,128 +175,176 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(18, 4, 18, _compact ? 10 : 18),
+                  // Header — aşağı çekince sayfa yenilenir
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onVerticalDragStart: (_) => _onPullStart(),
+                    onVerticalDragUpdate: (d) => _onPullUpdate(d.delta.dy),
+                    onVerticalDragEnd: (_) => _onPullEnd(),
+                    onVerticalDragCancel: _onPullEnd,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Logo ve başlık
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // Logo
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.forest.withOpacity(0.15),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
+                        AnimatedContainer(
+                          duration: _pulling
+                              ? Duration.zero
+                              : const Duration(milliseconds: 220),
+                          curve: Curves.easeOut,
+                          height: _refreshing ? 48 : _pull,
+                          alignment: Alignment.center,
+                          child: (_pull > 8 || _refreshing)
+                              ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: AppColors.forest,
+                                    backgroundColor: AppColors.forest
+                                        .withOpacity(0.1),
+                                    value: _refreshing
+                                        ? null
+                                        : (_pull / _pullThreshold).clamp(
+                                            0.0,
+                                            1.0,
+                                          ),
+                                  ),
+                                )
+                              : null,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            18,
+                            4,
+                            18,
+                            _compact ? 10 : 18,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Logo ve başlık
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // Logo
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.forest.withOpacity(
+                                            0.15,
+                                          ),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.asset(
+                                        'assets/logo.png',
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  // Başlık ve alt yazı
+                                  Expanded(
+                                    child: Consumer<HomesProvider>(
+                                      builder: (context, provider, _) {
+                                        final title = _currentTab == 1
+                                            ? 'Kayıtlı Evler'
+                                            : (provider
+                                                      .tempHome
+                                                      .title
+                                                      .isNotEmpty
+                                                  ? provider.tempHome.title
+                                                  : 'Cebinden Eve');
+                                        return Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              title,
+                                              style: GoogleFonts.fraunces(
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: -0.02 * 24,
+                                                color: AppColors.forest,
+                                              ),
+                                            ),
+                                            if (_currentTab == 0 &&
+                                                provider.tempHome.title.isEmpty)
+                                              Text(
+                                                'Ev maliyet hesaplayıcı',
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 12,
+                                                  color: AppColors.muted,
+                                                ),
+                                              ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  // Girişli ise çıkış, misafirse giriş
+                                  Consumer<AuthProvider>(
+                                    builder: (context, auth, _) {
+                                      if (auth.isAuthenticated) {
+                                        return GestureDetector(
+                                          onTap: _onSignOut,
+                                          child: const Icon(
+                                            Icons.logout_rounded,
+                                            size: 20,
+                                            color: AppColors.muted,
+                                          ),
+                                        );
+                                      }
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => const AuthScreen(
+                                                forSave: true,
+                                              ),
+                                              fullscreenDialog: true,
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          'Giriş',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.forest,
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ],
                               ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.asset(
-                                  'assets/logo.png',
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Başlık ve alt yazı
-                            Expanded(
-                              child: Consumer<HomesProvider>(
-                                builder: (context, provider, _) {
-                                  final title = _currentTab == 1
-                                      ? 'Kayıtlı Evler'
-                                      : (provider.tempHome.title.isNotEmpty
-                                            ? provider.tempHome.title
-                                            : 'Cebinden Eve');
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        title,
-                                        style: GoogleFonts.fraunces(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: -0.02 * 24,
-                                          color: AppColors.forest,
-                                        ),
-                                      ),
-                                      if (_currentTab == 0 &&
-                                          provider.tempHome.title.isEmpty)
-                                        Text(
-                                          'Ev maliyet hesaplayıcı',
+                              AnimatedSize(
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeOut,
+                                alignment: Alignment.topLeft,
+                                child: (_pageLead == null || _compact)
+                                    ? const SizedBox(width: double.infinity)
+                                    : Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Text(
+                                          _pageLead!,
                                           style: GoogleFonts.outfit(
-                                            fontSize: 12,
+                                            fontSize: 15,
                                             color: AppColors.muted,
+                                            height: 1.5,
                                           ),
                                         ),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ),
-                            // Girişli ise çıkış, misafirse giriş
-                            Consumer<AuthProvider>(
-                              builder: (context, auth, _) {
-                                if (auth.isAuthenticated) {
-                                  return GestureDetector(
-                                    onTap: _onSignOut,
-                                    child: const Icon(
-                                      Icons.logout_rounded,
-                                      size: 20,
-                                      color: AppColors.muted,
-                                    ),
-                                  );
-                                }
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const AuthScreen(forSave: true),
-                                        fullscreenDialog: true,
                                       ),
-                                    );
-                                  },
-                                  child: Text(
-                                    'Giriş',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.forest,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                        AnimatedSize(
-                          duration: const Duration(milliseconds: 200),
-                          curve: Curves.easeOut,
-                          alignment: Alignment.topLeft,
-                          child: (_pageLead == null || _compact)
-                              ? const SizedBox(width: double.infinity)
-                              : Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    _pageLead!,
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 15,
-                                      color: AppColors.muted,
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -315,17 +392,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: NotificationListener<ScrollNotification>(
                       onNotification: _onScroll,
-                      child: RefreshIndicator(
-                        color: AppColors.forest,
-                        backgroundColor: AppColors.white,
-                        onRefresh: _onRefresh,
-                        child: _currentTab == 0
-                            ? CalculatorScreen(onSave: _onSave, onNew: _onNew)
-                            : SavedHomesScreen(
-                                onAddNew: _onAddFromList,
-                                onEditHome: _onEditHome,
-                              ),
-                      ),
+                      child: _currentTab == 0
+                          ? CalculatorScreen(onSave: _onSave, onNew: _onNew)
+                          : SavedHomesScreen(
+                              onAddNew: _onAddFromList,
+                              onEditHome: _onEditHome,
+                            ),
                     ),
                   ),
                 ],

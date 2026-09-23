@@ -34,6 +34,7 @@ class _CostBreakdownState extends State<CostBreakdown> {
   final _amountController = TextEditingController();
   final _nameController = TextEditingController();
   final _formKey = GlobalKey();
+  final _addSectionKey = GlobalKey();
 
   @override
   void dispose() {
@@ -88,14 +89,16 @@ class _CostBreakdownState extends State<CostBreakdown> {
     _scrollToForm();
   }
 
-  void _scrollToForm() {
+  void _scrollToForm() => _scrollTo(_formKey, 0.2);
+
+  void _scrollTo(GlobalKey key, double alignment) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctx = _formKey.currentContext;
+      final ctx = key.currentContext;
       if (ctx != null) {
         Scrollable.ensureVisible(
           ctx,
-          duration: const Duration(milliseconds: 250),
-          alignment: 0.2,
+          duration: const Duration(milliseconds: 300),
+          alignment: alignment,
           curve: Curves.easeOut,
         );
       }
@@ -121,6 +124,8 @@ class _CostBreakdownState extends State<CostBreakdown> {
       widget.onAddCost?.call(_draftTemplate!.toCostItem(amount: amount));
     }
     _clearDraft();
+    FocusManager.instance.primaryFocus?.unfocus();
+    _scrollTo(_addSectionKey, 0.1);
   }
 
   String get _draftTitle {
@@ -224,6 +229,7 @@ class _CostBreakdownState extends State<CostBreakdown> {
             if (isEditable) ...[
               const SizedBox(height: 8),
               GestureDetector(
+                key: _addSectionKey,
                 onTap: () => setState(() {
                   _isExpanded = !_isExpanded;
                   if (!_isExpanded) _clearDraft();
