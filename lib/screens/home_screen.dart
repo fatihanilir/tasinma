@@ -106,7 +106,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // iOS Chrome/Safari klavye açınca Scaffold'u küçültmesin —
+    // aksi halde Yeni ev/Kaydet yukarı kayıp altta boşluk oluşuyor.
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppColors.bgGradient,

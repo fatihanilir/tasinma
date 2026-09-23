@@ -28,11 +28,117 @@ class CostBreakdown extends StatefulWidget {
 
 class _CostBreakdownState extends State<CostBreakdown> {
   bool _isExpanded = false;
+  CostTemplate? _draftTemplate;
+  bool _draftCustom = false;
+  String? _editingCostId;
+  final _amountController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _formKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  void _clearDraft() {
+    setState(() {
+      _draftTemplate = null;
+      _draftCustom = false;
+      _editingCostId = null;
+      _amountController.clear();
+      _nameController.clear();
+    });
+  }
+
+  void _startTemplate(CostTemplate template) {
+    setState(() {
+      _isExpanded = true;
+      _draftTemplate = template;
+      _draftCustom = false;
+      _editingCostId = null;
+      _amountController.clear();
+      _nameController.clear();
+    });
+    _scrollToForm();
+  }
+
+  void _startCustom() {
+    setState(() {
+      _isExpanded = true;
+      _draftTemplate = null;
+      _draftCustom = true;
+      _editingCostId = null;
+      _amountController.clear();
+      _nameController.clear();
+    });
+    _scrollToForm();
+  }
+
+  void _startEdit(CostItem cost) {
+    setState(() {
+      _isExpanded = true;
+      _draftTemplate = null;
+      _draftCustom = false;
+      _editingCostId = cost.id;
+      _nameController.text = cost.name;
+      _amountController.text = Formatters.formatNumber(cost.amount);
+    });
+    _scrollToForm();
+  }
+
+  void _scrollToForm() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _formKey.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 250),
+          alignment: 0.2,
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _confirmDraft() {
+    final amount = Formatters.parseNumber(_amountController.text);
+    if (amount <= 0) return;
+
+    if (_editingCostId != null) {
+      widget.onUpdateCostAmount?.call(_editingCostId!, amount);
+    } else if (_draftCustom) {
+      final name = _nameController.text.trim();
+      if (name.isEmpty) return;
+      widget.onAddCost?.call(CostItem(
+        id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+        name: name,
+        amount: amount,
+        category: CostCategory.other,
+      ));
+    } else if (_draftTemplate != null) {
+      widget.onAddCost?.call(_draftTemplate!.toCostItem(amount: amount));
+    }
+    _clearDraft();
+  }
+
+  String get _draftTitle {
+    if (_editingCostId != null) {
+      return _nameController.text.isNotEmpty
+          ? _nameController.text
+          : 'Tutarı güncelle';
+    }
+    if (_draftCustom) return 'Özel maliyet';
+    return _draftTemplate?.name ?? '';
+  }
 
   @override
   Widget build(BuildContext context) {
     final home = widget.home;
     final isEditable = widget.onAddCost != null;
+    final showDraft =
+        _draftTemplate != null || _draftCustom || _editingCostId != null;
 
     return Card(
       child: Padding(
@@ -44,8 +150,7 @@ class _CostBreakdownState extends State<CostBreakdown> {
               'MALİYET KIRILIMI',
               style: Theme.of(context).textTheme.labelMedium,
             ),
-            
-            // Banka giderleri uyarısı (kredi çekilecekse)
+
             if (home.needsLoan) ...[
               const SizedBox(height: 12),
               Container(
@@ -57,8 +162,8 @@ class _CostBreakdownState extends State<CostBreakdown> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline_rounded, 
-                      color: AppColors.coral, size: 18),
+                    const Icon(Icons.info_outline_rounded,
+                        color: AppColors.coral, size: 18),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -75,63 +180,54 @@ class _CostBreakdownState extends State<CostBreakdown> {
               ),
             ],
             const SizedBox(height: 16),
-            
-            // Ev fiyatı
+
             _CostRow(
               label: 'Ev fiyatı',
               value: home.price > 0 ? Formatters.formatTL(home.price) : '—',
             ),
-            
-            // Alım-satım vergisi
             _CostRow(
-              label: 'Alım-satım vergisi ${Formatters.formatPercent(home.taxRate)}',
+              label:
+                  'Alım-satım vergisi ${Formatters.formatPercent(home.taxRate)}',
               value: home.price > 0 ? Formatters.formatTL(home.tax) : '—',
             ),
-            
-            // Emlakçı komisyonu
             _CostRow(
               label: home.commRate == 0
                   ? 'Emlakçı (sahibinden)'
                   : 'Emlakçı komisyonu ${Formatters.formatPercent(home.commRate)}',
-              value: home.price > 0 ? Formatters.formatTL(home.commission) : '—',
+              value:
+                  home.price > 0 ? Formatters.formatTL(home.commission) : '—',
             ),
-            
-            // Döner sermaye (sadece fiyat girilmişse göster)
             if (home.hasValidInput)
               _CostRow(
                 label: 'Döner sermaye',
                 value: Formatters.formatTL(HomeModel.donerSermaye),
               ),
-            
-            // Döner sermaye - ipotek borcu (yalnızca kredi gerekiyorsa)
             if (home.needsLoan)
               _CostRow(
                 label: 'Döner sermaye - ipotek borcu',
                 value: Formatters.formatTL(HomeModel.donerSermaye),
               ),
-            
-            // Tadilat
             if (home.reno > 0)
               _CostRow(
                 label: 'Tadilat',
                 value: Formatters.formatTL(home.reno),
               ),
-            
-            // Ek maliyetler
+
             ...home.additionalCosts.map((cost) => _CostRow(
                   label: cost.name,
                   value: Formatters.formatTL(cost.amount),
-                  onRemove: isEditable ? () => widget.onRemoveCost?.call(cost.id) : null,
-                  onEdit: isEditable
-                      ? () => _showEditCostDialog(cost)
-                      : null,
+                  onRemove:
+                      isEditable ? () => widget.onRemoveCost?.call(cost.id) : null,
+                  onEdit: isEditable ? () => _startEdit(cost) : null,
                 )),
-            
-            // Maliyet ekle butonu
+
             if (isEditable) ...[
               const SizedBox(height: 8),
               GestureDetector(
-                onTap: () => setState(() => _isExpanded = !_isExpanded),
+                onTap: () => setState(() {
+                  _isExpanded = !_isExpanded;
+                  if (!_isExpanded) _clearDraft();
+                }),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
@@ -159,20 +255,38 @@ class _CostBreakdownState extends State<CostBreakdown> {
                   ),
                 ),
               ),
-              
-              // Genişletilebilir maliyet ekleme bölümü
+
               if (_isExpanded) ...[
                 const SizedBox(height: 12),
-                _QuickCostOptions(
-                  onAddCost: widget.onAddCost,
-                  existingCostIds: home.additionalCosts.map((c) => c.id).toSet(),
+                _QuickCostChips(
+                  existingCostIds:
+                      home.additionalCosts.map((c) => c.id).toSet(),
+                  selectedId: _draftTemplate?.id,
+                  customSelected: _draftCustom,
+                  onSelect: _startTemplate,
+                  onCustom: _startCustom,
                 ),
+                if (showDraft) ...[
+                  const SizedBox(height: 12),
+                  KeyedSubtree(
+                    key: _formKey,
+                    child: _InlineAmountForm(
+                      title: _draftTitle,
+                      showNameField: _draftCustom,
+                      nameController: _nameController,
+                      amountController: _amountController,
+                      confirmLabel:
+                          _editingCostId != null ? 'Kaydet' : 'Ekle',
+                      onCancel: _clearDraft,
+                      onConfirm: _confirmDraft,
+                    ),
+                  ),
+                ],
               ],
             ],
-            
+
             const SizedBox(height: 16),
-            
-            // Toplam - öne çıkan tasarım
+
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -198,7 +312,7 @@ class _CostBreakdownState extends State<CostBreakdown> {
                       color: AppColors.forest.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.account_balance_wallet_rounded,
                       size: 20,
                       color: AppColors.forest,
@@ -220,7 +334,9 @@ class _CostBreakdownState extends State<CostBreakdown> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          home.price > 0 ? Formatters.formatTL(home.totalCost) : '—',
+                          home.price > 0
+                              ? Formatters.formatTL(home.totalCost)
+                              : '—',
                           style: GoogleFonts.fraunces(
                             fontSize: 24,
                             fontWeight: FontWeight.w700,
@@ -234,8 +350,7 @@ class _CostBreakdownState extends State<CostBreakdown> {
                 ],
               ),
             ),
-            
-            // Genel uyarı
+
             if (widget.warningMessage != null) ...[
               const SizedBox(height: 12),
               Container(
@@ -259,188 +374,218 @@ class _CostBreakdownState extends State<CostBreakdown> {
       ),
     );
   }
-
-  void _showEditCostDialog(CostItem cost) {
-    _showAmountSheet(
-      context: context,
-      title: cost.name,
-      initialAmount: cost.amount,
-      confirmLabel: 'Kaydet',
-      onConfirm: (amount) {
-        widget.onUpdateCostAmount?.call(cost.id, amount);
-      },
-    );
-  }
 }
 
-void _showAmountSheet({
-  required BuildContext context,
-  required String title,
-  double? initialAmount,
-  String confirmLabel = 'Ekle',
-  required ValueChanged<double> onConfirm,
-}) {
-  final amountController = TextEditingController(
-    text: initialAmount != null && initialAmount > 0
-        ? Formatters.formatNumber(initialAmount)
-        : '',
-  );
+class _InlineAmountForm extends StatelessWidget {
+  final String title;
+  final bool showNameField;
+  final TextEditingController nameController;
+  final TextEditingController amountController;
+  final String confirmLabel;
+  final VoidCallback onCancel;
+  final VoidCallback onConfirm;
 
-  // iOS mobil web'de bottom sheet + klavye sorunlu, dialog kullanalım
-  showDialog(
-    context: context,
-    builder: (ctx) {
-      return AlertDialog(
-        backgroundColor: const Color(0xFFFFFDF8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          title,
-          style: GoogleFonts.fraunces(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: AppColors.forest,
-          ),
-        ),
-        content: TextField(
-          controller: amountController,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(
-            labelText: 'Tutar (TL)',
-            border: OutlineInputBorder(),
-          ),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
-          ],
-          onChanged: (_) {
-            final text = amountController.text;
-            final formatted = Formatters.formatInputValue(text);
-            if (formatted != text) {
-              amountController.value = TextEditingValue(
-                text: formatted,
-                selection: TextSelection.collapsed(offset: formatted.length),
-              );
-            }
-          },
-          onSubmitted: (_) {
-            final amount = Formatters.parseNumber(amountController.text);
-            if (amount <= 0) return;
-            onConfirm(amount);
-            Navigator.pop(ctx);
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'İptal',
-              style: GoogleFonts.outfit(color: AppColors.muted),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final amount = Formatters.parseNumber(amountController.text);
-              if (amount <= 0) return;
-              onConfirm(amount);
-              Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.forest,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(confirmLabel),
-          ),
-        ],
+  const _InlineAmountForm({
+    required this.title,
+    required this.showNameField,
+    required this.nameController,
+    required this.amountController,
+    required this.confirmLabel,
+    required this.onCancel,
+    required this.onConfirm,
+  });
+
+  void _formatAmount() {
+    final text = amountController.text;
+    final formatted = Formatters.formatInputValue(text);
+    if (formatted != text) {
+      amountController.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
       );
-    },
-  );
-}
+    }
+  }
 
-void _showCustomCostSheet({
-  required BuildContext context,
-  required void Function(String name, double amount) onConfirm,
-}) {
-  final nameController = TextEditingController();
-  final amountController = TextEditingController();
-
-  showDialog(
-    context: context,
-    builder: (ctx) {
-      return AlertDialog(
-        backgroundColor: const Color(0xFFFFFDF8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Özel Maliyet Ekle',
-          style: GoogleFonts.fraunces(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: AppColors.forest,
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.fraunces(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.forest,
+            ),
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+          const SizedBox(height: 12),
+          if (showNameField) ...[
             TextField(
               controller: nameController,
-              autofocus: true,
               textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
                 labelText: 'Maliyet adı',
                 border: OutlineInputBorder(),
+                isDense: true,
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: amountController,
-              keyboardType: TextInputType.number,
-              textInputAction: TextInputAction.done,
-              decoration: const InputDecoration(
-                labelText: 'Tutar (TL)',
-                border: OutlineInputBorder(),
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
-              ],
-              onChanged: (_) {
-                final text = amountController.text;
-                final formatted = Formatters.formatInputValue(text);
-                if (formatted != text) {
-                  amountController.value = TextEditingValue(
-                    text: formatted,
-                    selection: TextSelection.collapsed(offset: formatted.length),
-                  );
-                }
-              },
-            ),
+            const SizedBox(height: 10),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'İptal',
-              style: GoogleFonts.outfit(color: AppColors.muted),
+          TextField(
+            controller: amountController,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(
+              labelText: 'Tutar (TL)',
+              border: OutlineInputBorder(),
+              isDense: true,
             ),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+            ],
+            onChanged: (_) => _formatAmount(),
+            onSubmitted: (_) => onConfirm(),
           ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              final amount = Formatters.parseNumber(amountController.text);
-              if (name.isEmpty || amount <= 0) return;
-              onConfirm(name, amount);
-              Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.forest,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Ekle'),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onCancel,
+                  child: const Text('İptal'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: onConfirm,
+                  child: Text(confirmLabel),
+                ),
+              ),
+            ],
           ),
         ],
-      );
-    },
-  );
+      ),
+    );
+  }
+}
+
+class _QuickCostChips extends StatelessWidget {
+  final Set<String> existingCostIds;
+  final String? selectedId;
+  final bool customSelected;
+  final ValueChanged<CostTemplate> onSelect;
+  final VoidCallback onCustom;
+
+  const _QuickCostChips({
+    required this.existingCostIds,
+    required this.selectedId,
+    required this.customSelected,
+    required this.onSelect,
+    required this.onCustom,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'HIZLI SEÇENEKLER',
+          style: GoogleFonts.outfit(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.1 * 11,
+            color: AppColors.muted,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: CostTemplates.quickOptions.map((template) {
+            final isAdded = existingCostIds.contains(template.id);
+            final isSelected = selectedId == template.id;
+            return GestureDetector(
+              onTap: isAdded ? null : () => onSelect(template),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isAdded
+                      ? AppColors.forest
+                      : (isSelected ? AppColors.goldSoft : Colors.white),
+                  border: Border.all(
+                    color: isAdded || isSelected
+                        ? AppColors.forest
+                        : AppColors.line,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isAdded)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 6),
+                        child:
+                            Icon(Icons.check, size: 14, color: Colors.white),
+                      ),
+                    Text(
+                      template.name,
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: isAdded ? Colors.white : AppColors.forest,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: onCustom,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: customSelected ? AppColors.goldSoft : Colors.white,
+              border: Border.all(
+                color: customSelected ? AppColors.forest : AppColors.line,
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add, size: 16, color: AppColors.forest2),
+                const SizedBox(width: 6),
+                Text(
+                  'Diğer (özel maliyet)',
+                  style: GoogleFonts.outfit(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.forest2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _CostRow extends StatelessWidget {
@@ -523,126 +668,3 @@ class _CostRow extends StatelessWidget {
     );
   }
 }
-
-class _QuickCostOptions extends StatelessWidget {
-  final Function(CostItem)? onAddCost;
-  final Set<String> existingCostIds;
-
-  const _QuickCostOptions({
-    required this.onAddCost,
-    required this.existingCostIds,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'HIZLI SEÇENEKLER',
-          style: GoogleFonts.outfit(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1 * 11,
-            color: AppColors.muted,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: CostTemplates.quickOptions.map((template) {
-            final isAdded = existingCostIds.contains(template.id);
-            return GestureDetector(
-              onTap: isAdded
-                  ? null
-                  : () => _showAmountDialog(context, template),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isAdded ? AppColors.forest : Colors.white,
-                  border: Border.all(
-                    color: isAdded ? AppColors.forest : AppColors.line,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isAdded)
-                      const Padding(
-                        padding: EdgeInsets.only(right: 6),
-                        child: Icon(Icons.check, size: 14, color: Colors.white),
-                      ),
-                    Text(
-                      template.name,
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: isAdded ? Colors.white : AppColors.forest,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 12),
-        // Diğer (özel maliyet)
-        GestureDetector(
-          onTap: () => _showCustomCostDialog(context),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: AppColors.line),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.add, size: 16, color: AppColors.forest2),
-                const SizedBox(width: 6),
-                Text(
-                  'Diğer (özel maliyet)',
-                  style: GoogleFonts.outfit(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.forest2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showAmountDialog(BuildContext context, CostTemplate template) {
-    _showAmountSheet(
-      context: context,
-      title: template.name,
-      onConfirm: (amount) {
-        onAddCost?.call(template.toCostItem(amount: amount));
-      },
-    );
-  }
-
-  void _showCustomCostDialog(BuildContext context) {
-    _showCustomCostSheet(
-      context: context,
-      onConfirm: (name, amount) {
-        final customId = 'custom_${DateTime.now().millisecondsSinceEpoch}';
-        onAddCost?.call(CostItem(
-          id: customId,
-          name: name,
-          amount: amount,
-          category: CostCategory.other,
-        ));
-      },
-    );
-  }
-}
-
