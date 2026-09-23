@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -286,114 +285,76 @@ void _showAmountSheet({
         ? Formatters.formatNumber(initialAmount)
         : '',
   );
-  final focusNode = FocusNode();
 
-  showModalBottomSheet(
+  // iOS mobil web'de bottom sheet + klavye sorunlu, dialog kullanalım
+  showDialog(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (ctx) {
-      // Bottom sheet açıldıktan sonra focus ver (klavye gecikmeli açılsın)
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (focusNode.canRequestFocus) {
-            focusNode.requestFocus();
-          }
-        });
-      });
-      
-      return Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFFFFDF8),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.line,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: GoogleFonts.fraunces(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.forest,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: amountController,
-                focusNode: focusNode,
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  labelText: 'Tutar (TL)',
-                  border: OutlineInputBorder(),
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
-                ],
-                onChanged: (_) {
-                  final text = amountController.text;
-                  final formatted = Formatters.formatInputValue(text);
-                  if (formatted != text) {
-                    amountController.value = TextEditingValue(
-                      text: formatted,
-                      selection:
-                          TextSelection.collapsed(offset: formatted.length),
-                    );
-                  }
-                },
-                onSubmitted: (_) {
-                  final amount = Formatters.parseNumber(amountController.text);
-                  if (amount <= 0) return;
-                  onConfirm(amount);
-                  Navigator.pop(ctx);
-                },
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('İptal'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final amount =
-                            Formatters.parseNumber(amountController.text);
-                        if (amount <= 0) return;
-                        onConfirm(amount);
-                        Navigator.pop(ctx);
-                      },
-                      child: Text(confirmLabel),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+      return AlertDialog(
+        backgroundColor: const Color(0xFFFFFDF8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          title,
+          style: GoogleFonts.fraunces(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.forest,
           ),
         ),
+        content: TextField(
+          controller: amountController,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          textInputAction: TextInputAction.done,
+          decoration: const InputDecoration(
+            labelText: 'Tutar (TL)',
+            border: OutlineInputBorder(),
+          ),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+          ],
+          onChanged: (_) {
+            final text = amountController.text;
+            final formatted = Formatters.formatInputValue(text);
+            if (formatted != text) {
+              amountController.value = TextEditingValue(
+                text: formatted,
+                selection: TextSelection.collapsed(offset: formatted.length),
+              );
+            }
+          },
+          onSubmitted: (_) {
+            final amount = Formatters.parseNumber(amountController.text);
+            if (amount <= 0) return;
+            onConfirm(amount);
+            Navigator.pop(ctx);
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'İptal',
+              style: GoogleFonts.outfit(color: AppColors.muted),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final amount = Formatters.parseNumber(amountController.text);
+              if (amount <= 0) return;
+              onConfirm(amount);
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.forest,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(confirmLabel),
+          ),
+        ],
       );
     },
-  ).whenComplete(() => focusNode.dispose());
+  );
 }
 
 void _showCustomCostSheet({
@@ -403,107 +364,80 @@ void _showCustomCostSheet({
   final nameController = TextEditingController();
   final amountController = TextEditingController();
 
-  showModalBottomSheet(
+  showDialog(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (ctx) {
-      // iOS Safari'de viewInsets yanlış değer döndürebiliyor
-      // Web'de tarayıcı zaten klavyeyi yönetiyor, ekstra padding eklemeyelim
-      final bottomInset = kIsWeb ? 0.0 : MediaQuery.viewInsetsOf(ctx).bottom;
-      
-      return Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFFFFDF8),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + bottomInset),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.line,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Özel Maliyet Ekle',
-                style: GoogleFonts.fraunces(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.forest,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: nameController,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Maliyet adı',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: amountController,
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  labelText: 'Tutar (TL)',
-                  border: OutlineInputBorder(),
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
-                ],
-                onChanged: (_) {
-                  final text = amountController.text;
-                  final formatted = Formatters.formatInputValue(text);
-                  if (formatted != text) {
-                    amountController.value = TextEditingValue(
-                      text: formatted,
-                      selection:
-                          TextSelection.collapsed(offset: formatted.length),
-                    );
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('İptal'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final name = nameController.text.trim();
-                        final amount =
-                            Formatters.parseNumber(amountController.text);
-                        if (name.isEmpty || amount <= 0) return;
-                        onConfirm(name, amount);
-                        Navigator.pop(ctx);
-                      },
-                      child: const Text('Ekle'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+      return AlertDialog(
+        backgroundColor: const Color(0xFFFFFDF8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Özel Maliyet Ekle',
+          style: GoogleFonts.fraunces(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.forest,
           ),
         ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              autofocus: true,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Maliyet adı',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: amountController,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                labelText: 'Tutar (TL)',
+                border: OutlineInputBorder(),
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+              ],
+              onChanged: (_) {
+                final text = amountController.text;
+                final formatted = Formatters.formatInputValue(text);
+                if (formatted != text) {
+                  amountController.value = TextEditingValue(
+                    text: formatted,
+                    selection: TextSelection.collapsed(offset: formatted.length),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'İptal',
+              style: GoogleFonts.outfit(color: AppColors.muted),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              final amount = Formatters.parseNumber(amountController.text);
+              if (name.isEmpty || amount <= 0) return;
+              onConfirm(name, amount);
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.forest,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Ekle'),
+          ),
+        ],
       );
     },
   );
