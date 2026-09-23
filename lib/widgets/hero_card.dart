@@ -129,7 +129,7 @@ class _Chip extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label.toUpperCase(),
+            Formatters.upperTr(label),
             style: GoogleFonts.outfit(
               fontSize: 11,
               fontWeight: FontWeight.w600,

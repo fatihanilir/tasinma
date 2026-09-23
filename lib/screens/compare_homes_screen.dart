@@ -52,41 +52,66 @@ class CompareHomesScreen extends StatelessWidget {
                         children: [
                           Card(
                             child: Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                               child: Column(
                                 children: [
                                   _HeaderRow(a: a, b: b),
-                                  const SizedBox(height: 8),
-                                  _CompareRow(
+                                  _MoneyRow(
                                     label: 'Toplam maliyet',
                                     valueA: a.totalCost,
                                     valueB: b.totalCost,
                                     emphasize: true,
                                   ),
-                                  _CompareRow(
+                                  _MoneyRow(
                                     label: 'Çekilecek kredi',
                                     valueA: a.loanAmount,
                                     valueB: b.loanAmount,
                                     emphasize: true,
                                     zeroLabel: 'Yok',
                                   ),
-                                  _CompareRow(
+                                  _MoneyRow(
                                     label: 'Ev fiyatı',
                                     valueA: a.price,
                                     valueB: b.price,
                                   ),
-                                  _TextRow(
+                                  _CompareRow(
                                     label: 'Aylık faiz',
-                                    textA: Formatters.formatPercent(
-                                        a.interestRate),
-                                    textB: Formatters.formatPercent(
-                                        b.interestRate),
+                                    cellA: _ValueCell(
+                                      text: Formatters.formatPercent(
+                                          a.interestRate),
+                                      alignRight: false,
+                                    ),
+                                    cellB: _ValueCell(
+                                      text: Formatters.formatPercent(
+                                          b.interestRate),
+                                      alignRight: true,
+                                    ),
+                                    isLast: true,
                                   ),
-                                  const SizedBox(height: 12),
-                                  _SectionLabel('VADELER VE AYLIK ÖDEME'),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'VADELER VE AYLIK ÖDEME',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.1 * 11,
+                                      color: AppColors.muted,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
                                   _PaymentRow(
                                     label: sameTerms
-                                        ? '${a.term1} ay'
+                                        ? '${a.term1} ay vade'
                                         : '1. vade',
                                     monthsA: a.term1,
                                     monthsB: b.term1,
@@ -98,7 +123,7 @@ class CompareHomesScreen extends StatelessWidget {
                                   ),
                                   _PaymentRow(
                                     label: sameTerms
-                                        ? '${a.term2} ay'
+                                        ? '${a.term2} ay vade'
                                         : '2. vade',
                                     monthsA: a.term2,
                                     monthsB: b.term2,
@@ -114,7 +139,7 @@ class CompareHomesScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 14),
-                          _Summary(a: a, b: b),
+                          _Summary(a: a, b: b, sameTerms: sameTerms),
                         ],
                       ),
                     ),
@@ -129,24 +154,20 @@ class CompareHomesScreen extends StatelessWidget {
   }
 }
 
-const _labelFlex = 4;
-const _valueFlex = 5;
-
 class _HeaderRow extends StatelessWidget {
   final HomeModel a;
   final HomeModel b;
 
   const _HeaderRow({required this.a, required this.b});
 
-  Widget _title(String text) => Expanded(
-        flex: _valueFlex,
+  Widget _title(String text, TextAlign align) => Expanded(
         child: Text(
           text,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.right,
+          textAlign: align,
           style: GoogleFonts.fraunces(
-            fontSize: 15,
+            fontSize: 16,
             fontWeight: FontWeight.w600,
             color: AppColors.forest,
             height: 1.2,
@@ -156,51 +177,45 @@ class _HeaderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+    return Container(
+      padding: const EdgeInsets.only(bottom: 12),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.line)),
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const Expanded(flex: _labelFlex, child: SizedBox()),
-          _title(a.displayTitle),
-          const SizedBox(width: 10),
-          _title(b.displayTitle),
+          _title(a.displayTitle, TextAlign.left),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.goldSoft,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              'vs',
+              style: GoogleFonts.outfit(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.forest2,
+              ),
+            ),
+          ),
+          _title(b.displayTitle, TextAlign.right),
         ],
       ),
     );
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  const _SectionLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text,
-        style: GoogleFonts.outfit(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.1 * 11,
-          color: AppColors.muted,
-        ),
-      ),
-    );
-  }
-}
-
-class _RowShell extends StatelessWidget {
+class _CompareRow extends StatelessWidget {
   final String label;
   final Widget cellA;
   final Widget cellB;
   final bool emphasize;
   final bool isLast;
 
-  const _RowShell({
+  const _CompareRow({
     required this.label,
     required this.cellA,
     required this.cellB,
@@ -217,23 +232,26 @@ class _RowShell extends StatelessWidget {
             ? null
             : const Border(bottom: BorderSide(color: AppColors.line)),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
         children: [
-          Expanded(
-            flex: _labelFlex,
-            child: Text(
-              label,
-              style: GoogleFonts.outfit(
-                fontSize: 13,
-                fontWeight: emphasize ? FontWeight.w600 : FontWeight.w400,
-                color: emphasize ? AppColors.forest : AppColors.muted,
-              ),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              fontWeight: emphasize ? FontWeight.w600 : FontWeight.w500,
+              color: emphasize ? AppColors.forest : AppColors.muted,
             ),
           ),
-          Expanded(flex: _valueFlex, child: cellA),
-          const SizedBox(width: 10),
-          Expanded(flex: _valueFlex, child: cellB),
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: cellA),
+              const SizedBox(width: 12),
+              Expanded(child: cellB),
+            ],
+          ),
         ],
       ),
     );
@@ -245,9 +263,11 @@ class _ValueCell extends StatelessWidget {
   final String? subText;
   final bool better;
   final bool emphasize;
+  final bool alignRight;
 
   const _ValueCell({
     required this.text,
+    required this.alignRight,
     this.subText,
     this.better = false,
     this.emphasize = false,
@@ -256,40 +276,42 @@ class _ValueCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = better ? AppColors.forest : AppColors.ink;
+    final align = alignRight ? TextAlign.right : TextAlign.left;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment:
+          alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Container(
           padding: better
-              ? const EdgeInsets.symmetric(horizontal: 6, vertical: 2)
+              ? const EdgeInsets.symmetric(horizontal: 8, vertical: 3)
               : EdgeInsets.zero,
           decoration: better
               ? BoxDecoration(
                   color: AppColors.forest.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(8),
                 )
               : null,
           child: Text(
             text,
-            textAlign: TextAlign.right,
+            textAlign: align,
             style: emphasize
                 ? GoogleFonts.fraunces(
-                    fontSize: 15,
+                    fontSize: 17,
                     fontWeight: FontWeight.w700,
                     color: color,
                   )
                 : GoogleFonts.outfit(
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: color,
                   ),
           ),
         ),
         if (subText != null) ...[
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
             subText!,
-            textAlign: TextAlign.right,
+            textAlign: align,
             style: GoogleFonts.outfit(fontSize: 11, color: AppColors.muted),
           ),
         ],
@@ -298,14 +320,14 @@ class _ValueCell extends StatelessWidget {
   }
 }
 
-class _CompareRow extends StatelessWidget {
+class _MoneyRow extends StatelessWidget {
   final String label;
   final double valueA;
   final double valueB;
   final bool emphasize;
   final String zeroLabel;
 
-  const _CompareRow({
+  const _MoneyRow({
     required this.label,
     required this.valueA,
     required this.valueB,
@@ -318,40 +340,21 @@ class _CompareRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final differs = (valueA - valueB).abs() >= 1;
-    return _RowShell(
+    return _CompareRow(
       label: label,
       emphasize: emphasize,
       cellA: _ValueCell(
         text: _fmt(valueA),
+        alignRight: false,
         better: differs && valueA < valueB,
         emphasize: emphasize,
       ),
       cellB: _ValueCell(
         text: _fmt(valueB),
+        alignRight: true,
         better: differs && valueB < valueA,
         emphasize: emphasize,
       ),
-    );
-  }
-}
-
-class _TextRow extends StatelessWidget {
-  final String label;
-  final String textA;
-  final String textB;
-
-  const _TextRow({
-    required this.label,
-    required this.textA,
-    required this.textB,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return _RowShell(
-      label: label,
-      cellA: _ValueCell(text: textA),
-      cellB: _ValueCell(text: textB),
     );
   }
 }
@@ -379,11 +382,18 @@ class _PaymentRow extends StatelessWidget {
     this.isLast = false,
   });
 
-  _ValueCell _cell(int months, double payment, double total, bool better) {
+  _ValueCell _cell(
+    int months,
+    double payment,
+    double total,
+    bool better,
+    bool alignRight,
+  ) {
     if (payment <= 0) {
       return _ValueCell(
         text: 'Kredi yok',
         subText: showMonths ? '$months ay' : null,
+        alignRight: alignRight,
       );
     }
     final prefix = showMonths ? '$months ay · ' : '';
@@ -391,19 +401,21 @@ class _PaymentRow extends StatelessWidget {
       text: '${Formatters.formatTL(payment)}/ay',
       subText: '${prefix}toplam ${Formatters.formatTL(total)}',
       better: better,
+      alignRight: alignRight,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final differs = (paymentA - paymentB).abs() >= 1 &&
-        paymentA > 0 &&
-        paymentB > 0;
-    return _RowShell(
+    final differs =
+        (paymentA - paymentB).abs() >= 1 && paymentA > 0 && paymentB > 0;
+    return _CompareRow(
       label: label,
       isLast: isLast,
-      cellA: _cell(monthsA, paymentA, totalA, differs && paymentA < paymentB),
-      cellB: _cell(monthsB, paymentB, totalB, differs && paymentB < paymentA),
+      cellA: _cell(
+          monthsA, paymentA, totalA, differs && paymentA < paymentB, false),
+      cellB: _cell(
+          monthsB, paymentB, totalB, differs && paymentB < paymentA, true),
     );
   }
 }
@@ -411,20 +423,43 @@ class _PaymentRow extends StatelessWidget {
 class _Summary extends StatelessWidget {
   final HomeModel a;
   final HomeModel b;
+  final bool sameTerms;
 
-  const _Summary({required this.a, required this.b});
+  const _Summary({required this.a, required this.b, required this.sameTerms});
+
+  String? _paymentLine(String termLabel, double pa, double pb) {
+    if (pa <= 0 || pb <= 0) return null;
+    final diff = (pa - pb).abs();
+    if (diff < 1) return null;
+    final lower = pa < pb ? a : b;
+    return '${lower.displayTitle} $termLabel aylık ödemesi ${Formatters.formatTL(diff)} daha düşük.';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final diff = (a.totalCost - b.totalCost).abs();
-    final String text;
-    if (diff < 1) {
-      text = 'İki evin toplam maliyeti aynı.';
+    final lines = <String>[];
+
+    final costDiff = (a.totalCost - b.totalCost).abs();
+    if (costDiff < 1) {
+      lines.add('İki evin toplam maliyeti aynı.');
     } else {
-      final cheaper = a.totalCost < b.totalCost ? a : b;
-      text =
-          '${cheaper.displayTitle} toplamda ${Formatters.formatTL(diff)} daha ucuz.';
+      final lower = a.totalCost < b.totalCost ? a : b;
+      lines.add(
+          '${lower.displayTitle} toplamda ${Formatters.formatTL(costDiff)} daha düşük maliyetli.');
     }
+
+    final p1 = _paymentLine(
+      sameTerms ? '${a.term1} ay vadede' : '1. vadede',
+      a.paymentTerm1,
+      b.paymentTerm1,
+    );
+    final p2 = _paymentLine(
+      sameTerms ? '${a.term2} ay vadede' : '2. vadede',
+      a.paymentTerm2,
+      b.paymentTerm2,
+    );
+    if (p1 != null) lines.add(p1);
+    if (p2 != null) lines.add(p2);
 
     return Container(
       width: double.infinity,
@@ -433,22 +468,39 @@ class _Summary extends StatelessWidget {
         gradient: AppColors.heroGradient,
         borderRadius: BorderRadius.circular(18),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.compare_arrows_rounded,
-              color: AppColors.white, size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: GoogleFonts.outfit(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.white,
-                height: 1.4,
-              ),
+          for (var i = 0; i < lines.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 1),
+                  child: Icon(
+                    i == 0
+                        ? Icons.account_balance_wallet_rounded
+                        : Icons.calendar_month_rounded,
+                    color: AppColors.gold,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    lines[i],
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: i == 0 ? FontWeight.w600 : FontWeight.w500,
+                      color: AppColors.white,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
+          ],
         ],
       ),
     );

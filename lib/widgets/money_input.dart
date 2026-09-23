@@ -72,7 +72,7 @@ class _MoneyInputState extends State<MoneyInput> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.label.toUpperCase(),
+              Formatters.upperTr(widget.label),
               style: Theme.of(context).textTheme.labelMedium,
             ),
             const SizedBox(height: 10),

@@ -32,6 +32,10 @@ class Formatters {
     return formatNumber(number);
   }
 
+  /// Türkçe büyük harf: "Tadilat" -> "TADİLAT", "ışık" -> "IŞIK"
+  static String upperTr(String value) =>
+      value.replaceAll('i', 'İ').replaceAll('ı', 'I').toUpperCase();
+
   /// Yüzde formatı: 0.04 -> "%4"
   static String formatPercent(double rate) {
     final percent = rate * 100;

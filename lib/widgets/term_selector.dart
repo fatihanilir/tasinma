@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../utils/formatters.dart';
 
 class TermSelector extends StatelessWidget {
   final int term;
@@ -52,7 +53,7 @@ class TermSelector extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  label.toUpperCase(),
+                  Formatters.upperTr(label),
                   style: GoogleFonts.outfit(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,

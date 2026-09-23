@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../utils/formatters.dart';
 
 class SegmentOption<T> {
   final T value;
@@ -34,7 +35,7 @@ class SegmentControl<T> extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              label.toUpperCase(),
+              Formatters.upperTr(label),
               style: Theme.of(context).textTheme.labelMedium,
             ),
             const SizedBox(height: 10),

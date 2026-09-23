@@ -18,6 +18,26 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentTab = 0; // 0: Hesap, 1: Kayıtlı evler
+  bool _compact = false;
+
+  void _selectTab(int tab) {
+    setState(() {
+      _currentTab = tab;
+      _compact = false;
+    });
+  }
+
+  bool _onScroll(ScrollNotification n) {
+    if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
+    final px = n.metrics.pixels;
+    // Eşikler farklı: başlık küçülünce viewport değişip titreme yapmasın.
+    if (!_compact && px > 40) {
+      setState(() => _compact = true);
+    } else if (_compact && px < 8) {
+      setState(() => _compact = false);
+    }
+    return false;
+  }
 
   @override
   void initState() {
@@ -67,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final success = await provider.saveCurrentHome();
     if (success) {
       _showToast('Kaydedildi');
-      setState(() => _currentTab = 1);
+      _selectTab(1);
     } else if (provider.errorMessage != null) {
       _showToast(provider.errorMessage!);
       provider.clearError();
@@ -76,20 +96,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onNew() {
     context.read<HomesProvider>().resetForm();
-    setState(() => _currentTab = 0);
+    _selectTab(0);
     _showToast('Yeni ev');
   }
 
   void _onAddFromList() {
     context.read<HomesProvider>().resetForm();
-    setState(() => _currentTab = 0);
+    _selectTab(0);
   }
 
   void _onEditHome(String homeId) {
     final provider = context.read<HomesProvider>();
     final home = provider.homes.firstWhere((h) => h.id == homeId);
     provider.selectHomeForEdit(home);
-    setState(() => _currentTab = 0);
+    _selectTab(0);
     _showToast('Düzenleme modu');
   }
 
@@ -103,11 +123,9 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<HomesProvider>().setCloudMode(false);
   }
 
-  String get _pageLead {
-    if (_currentTab == 1) {
-      return 'Oklarla sırayı değiştirin; kayıtlar hesabına bağlı.';
-    }
-    return 'İlan fiyatını gir, eve girene kadar cebinden çıkacak toplam parayı hesaplayalım.';
+  String? get _pageLead {
+    if (_currentTab == 1) return null;
+    return 'İlan fiyatını gir; vergi, komisyon ve kredi dahil evin sana gerçek maliyetini görelim.';
   }
 
   @override
@@ -117,9 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.bgGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
         child: SafeArea(
           bottom: false,
           // Ortala ve max 560px genişlik (CSS: width: min(560px, 100%); margin: 0 auto;)
@@ -132,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   // Header
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 4, 18, 18),
+                    padding: EdgeInsets.fromLTRB(18, 4, 18, _compact ? 10 : 18),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -170,10 +186,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                   final title = _currentTab == 1
                                       ? 'Kayıtlı Evler'
                                       : (provider.tempHome.title.isNotEmpty
-                                          ? provider.tempHome.title
-                                          : 'Cebinden Eve');
+                                            ? provider.tempHome.title
+                                            : 'Cebinden Eve');
                                   return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         title,
@@ -184,7 +201,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                           color: AppColors.forest,
                                         ),
                                       ),
-                                      if (_currentTab == 0 && provider.tempHome.title.isEmpty)
+                                      if (_currentTab == 0 &&
+                                          provider.tempHome.title.isEmpty)
                                         Text(
                                           'Ev maliyet hesaplayıcı',
                                           style: GoogleFonts.outfit(
@@ -214,7 +232,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   onTap: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (_) => const AuthScreen(forSave: true),
+                                        builder: (_) =>
+                                            const AuthScreen(forSave: true),
                                         fullscreenDialog: true,
                                       ),
                                     );
@@ -232,14 +251,23 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _pageLead,
-                          style: GoogleFonts.outfit(
-                            fontSize: 15,
-                            color: AppColors.muted,
-                            height: 1.5,
-                          ),
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOut,
+                          alignment: Alignment.topLeft,
+                          child: (_pageLead == null || _compact)
+                              ? const SizedBox(width: double.infinity)
+                              : Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    _pageLead!,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 15,
+                                      color: AppColors.muted,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ),
                         ),
                       ],
                     ),
@@ -248,11 +276,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Tabs
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 18),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: EdgeInsets.all(_compact ? 4 : 6),
                       decoration: BoxDecoration(
                         color: AppColors.goldSoft,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(_compact ? 13 : 16),
                       ),
                       child: Row(
                         children: [
@@ -260,7 +289,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: _TabButton(
                               label: 'Hesap',
                               isSelected: _currentTab == 0,
-                              onTap: () => setState(() => _currentTab = 0),
+                              compact: _compact,
+                              onTap: () => _selectTab(0),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -268,30 +298,34 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: _TabButton(
                               label: 'Kayıtlı evler',
                               isSelected: _currentTab == 1,
-                              onTap: () => setState(() => _currentTab = 1),
+                              compact: _compact,
+                              onTap: () => _selectTab(1),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: _compact ? 10 : 16,
+                  ),
 
                   // Content
                   Expanded(
-                    child: RefreshIndicator(
-                      color: AppColors.forest,
-                      backgroundColor: AppColors.white,
-                      onRefresh: _onRefresh,
-                      child: _currentTab == 0
-                          ? CalculatorScreen(
-                              onSave: _onSave,
-                              onNew: _onNew,
-                            )
-                          : SavedHomesScreen(
-                              onAddNew: _onAddFromList,
-                              onEditHome: _onEditHome,
-                            ),
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: _onScroll,
+                      child: RefreshIndicator(
+                        color: AppColors.forest,
+                        backgroundColor: AppColors.white,
+                        onRefresh: _onRefresh,
+                        child: _currentTab == 0
+                            ? CalculatorScreen(onSave: _onSave, onNew: _onNew)
+                            : SavedHomesScreen(
+                                onAddNew: _onAddFromList,
+                                onEditHome: _onEditHome,
+                              ),
+                      ),
                     ),
                   ),
                 ],
@@ -307,12 +341,14 @@ class _HomeScreenState extends State<HomeScreen> {
 class _TabButton extends StatelessWidget {
   final String label;
   final bool isSelected;
+  final bool compact;
   final VoidCallback onTap;
 
   const _TabButton({
     required this.label,
     required this.isSelected,
     required this.onTap,
+    this.compact = false,
   });
 
   @override
@@ -321,16 +357,16 @@ class _TabButton extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 11),
+        padding: EdgeInsets.symmetric(vertical: compact ? 6 : 11),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.forest : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(compact ? 10 : 12),
           boxShadow: isSelected
               ? [
                   BoxShadow(
                     color: AppColors.forest.withOpacity(0.22),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
+                    blurRadius: compact ? 8 : 18,
+                    offset: Offset(0, compact ? 3 : 8),
                   ),
                 ]
               : null,
@@ -339,7 +375,7 @@ class _TabButton extends StatelessWidget {
           label,
           textAlign: TextAlign.center,
           style: GoogleFonts.outfit(
-            fontSize: 14,
+            fontSize: compact ? 13 : 14,
             fontWeight: FontWeight.w600,
             color: isSelected ? AppColors.white : AppColors.forest2,
           ),

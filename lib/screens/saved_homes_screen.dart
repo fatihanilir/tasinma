@@ -114,7 +114,7 @@ class _SavedHomesScreenState extends State<SavedHomesScreen> {
             Expanded(
               child: ListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(18, 0, 18, 100),
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
                 itemCount: homes.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) {

@@ -43,20 +43,20 @@ class HomeListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (selectionMode) return _buildSelectable();
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                    onTap: onTap,
-                    behavior: HitTestBehavior.opaque,
-                    child: Column(
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
@@ -100,49 +100,43 @@ class HomeListCard extends StatelessWidget {
                         ],
                       ],
                     ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        if (onEdit != null) ...[
+                          _MiniButton(label: 'Düzenle', onTap: onEdit!),
+                          const SizedBox(width: 8),
+                        ],
+                        if (home.hasLink) ...[
+                          _MiniButton(label: 'İlan', onTap: _openLink),
+                          const SizedBox(width: 8),
+                        ],
+                        _MiniButton(
+                          label: 'Sil',
+                          isDanger: true,
+                          onTap: onDelete,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                children: [
+                  _RankButton(
+                    icon: Icons.keyboard_arrow_up,
+                    onTap: isFirst ? null : onMoveUp,
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      if (onEdit != null) ...[
-                        _MiniButton(
-                          label: 'Düzenle',
-                          onTap: onEdit!,
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      if (home.hasLink) ...[
-                        _MiniButton(
-                          label: 'İlan',
-                          onTap: _openLink,
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      _MiniButton(
-                        label: 'Sil',
-                        isDanger: true,
-                        onTap: onDelete,
-                      ),
-                    ],
+                  const SizedBox(height: 6),
+                  _RankButton(
+                    icon: Icons.keyboard_arrow_down,
+                    onTap: isLast ? null : onMoveDown,
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              children: [
-                _RankButton(
-                  icon: Icons.keyboard_arrow_up,
-                  onTap: isFirst ? null : onMoveUp,
-                ),
-                const SizedBox(height: 6),
-                _RankButton(
-                  icon: Icons.keyboard_arrow_down,
-                  onTap: isLast ? null : onMoveDown,
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -206,8 +200,11 @@ class HomeListCard extends StatelessWidget {
                     ),
                   ),
                   child: isSelected
-                      ? const Icon(Icons.check,
-                          size: 16, color: AppColors.white)
+                      ? const Icon(
+                          Icons.check,
+                          size: 16,
+                          color: AppColors.white,
+                        )
                       : null,
                 ),
               ],
@@ -258,16 +255,14 @@ class _RankButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
 
-  const _RankButton({
-    required this.icon,
-    this.onTap,
-  });
+  const _RankButton({required this.icon, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final isDisabled = onTap == null;
     return GestureDetector(
-      onTap: onTap,
+      // Pasif ok da dokunuşu yutsun; yoksa kartın detayı açılıyor.
+      onTap: onTap ?? () {},
       child: Container(
         width: 36,
         height: 36,

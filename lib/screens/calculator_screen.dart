@@ -42,7 +42,7 @@ class CalculatorScreen extends StatelessWidget {
             Expanded(
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(18, 0, 18, 100),
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
                 child: Column(
                   children: [
                     // Ev fiyatı
@@ -91,7 +91,6 @@ class CalculatorScreen extends StatelessWidget {
                       ],
                       selectedValue: home.commRate,
                       onChanged: (v) => provider.updateTempHome(commRate: v),
-                      hint: 'Sahibinden seçilince komisyon 0 olur.',
                     ),
                     const SizedBox(height: 14),
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../utils/formatters.dart';
 
 class TextInputCard extends StatefulWidget {
   final String label;
@@ -61,7 +62,7 @@ class _TextInputCardState extends State<TextInputCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.label.toUpperCase(),
+              Formatters.upperTr(widget.label),
               style: Theme.of(context).textTheme.labelMedium,
             ),
             const SizedBox(height: 10),
