@@ -31,6 +31,14 @@ class AuthProvider extends ChangeNotifier {
   bool get canUseApp => isAuthenticated || _guestContinued;
   bool get isAppleSignInAvailable => _authService.isAppleSignInAvailable;
 
+  /// Premium gelene kadar herkese açık; premium'da kapanacak.
+  bool get isPremium => false;
+  bool get showAds => !isPremium;
+
+  /// Misafir: hesapta sticky takip. Girişli: maliyet kırılımı altı sabit.
+  bool get showStickyCalculatorAd => showAds && !isAuthenticated;
+  bool get showFixedCalculatorAd => showAds && isAuthenticated;
+
   AuthProvider() {
     _init();
   }

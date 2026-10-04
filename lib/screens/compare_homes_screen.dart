@@ -1,9 +1,126 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../models/home_model.dart';
+import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import '../widgets/ad_banner_placeholder.dart';
 
+class CompareHomesView extends StatelessWidget {
+  final HomeModel a;
+  final HomeModel b;
+
+  const CompareHomesView({super.key, required this.a, required this.b});
+
+  @override
+  Widget build(BuildContext context) {
+    final sameTerms = a.term1 == b.term1 && a.term2 == b.term2;
+    final showAds = context.watch<AuthProvider>().showAds;
+
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 32),
+      child: Column(
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Column(
+                children: [
+                  _HeaderRow(a: a, b: b),
+                  _MoneyRow(
+                    label: 'Toplam maliyet',
+                    valueA: a.totalCost,
+                    valueB: b.totalCost,
+                    emphasize: true,
+                  ),
+                  _MoneyRow(
+                    label: 'Çekilecek kredi',
+                    valueA: a.loanAmount,
+                    valueB: b.loanAmount,
+                    emphasize: true,
+                    zeroLabel: 'Yok',
+                  ),
+                  _MoneyRow(
+                    label: 'Ev fiyatı',
+                    valueA: a.price,
+                    valueB: b.price,
+                  ),
+                  _CompareRow(
+                    label: 'Aylık faiz',
+                    cellA: _ValueCell(
+                      text: Formatters.formatPercent(a.interestRate),
+                      alignRight: false,
+                    ),
+                    cellB: _ValueCell(
+                      text: Formatters.formatPercent(b.interestRate),
+                      alignRight: true,
+                    ),
+                    isLast: true,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (showAds) ...[
+            const SizedBox(height: 14),
+            const AdBannerPlaceholder(
+              label: 'Karşılaştır · vadeler kartı üstü',
+            ),
+          ],
+          const SizedBox(height: 14),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Column(
+                children: [
+                  Text(
+                    'VADELER VE AYLIK ÖDEME',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.1 * 11,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  _PaymentRow(
+                    label: sameTerms ? '${a.term1} ay vade' : '1. vade',
+                    monthsA: a.term1,
+                    monthsB: b.term1,
+                    paymentA: a.paymentTerm1,
+                    paymentB: b.paymentTerm1,
+                    totalA: a.totalPaymentTerm1,
+                    totalB: b.totalPaymentTerm1,
+                    showMonths: !sameTerms,
+                  ),
+                  _PaymentRow(
+                    label: sameTerms ? '${a.term2} ay vade' : '2. vade',
+                    monthsA: a.term2,
+                    monthsB: b.term2,
+                    paymentA: a.paymentTerm2,
+                    paymentB: b.paymentTerm2,
+                    totalA: a.totalPaymentTerm2,
+                    totalB: b.totalPaymentTerm2,
+                    showMonths: !sameTerms,
+                    isLast: true,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _Summary(a: a, b: b, sameTerms: sameTerms),
+        ],
+      ),
+    );
+  }
+}
+
+/// Geriye uyumluluk — artık kullanılmıyor; inline CompareHomesView tercih edilir.
+@Deprecated('Use CompareHomesView inside SavedHomesScreen')
 class CompareHomesScreen extends StatelessWidget {
   final HomeModel a;
   final HomeModel b;
@@ -12,8 +129,6 @@ class CompareHomesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sameTerms = a.term1 == b.term1 && a.term2 == b.term2;
-
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.bgGradient),
@@ -22,7 +137,6 @@ class CompareHomesScreen extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8, 4, 18, 12),
@@ -38,112 +152,13 @@ class CompareHomesScreen extends StatelessWidget {
                           style: GoogleFonts.fraunces(
                             fontSize: 24,
                             fontWeight: FontWeight.w600,
-                            letterSpacing: -0.02 * 24,
                             color: AppColors.forest,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 32),
-                      child: Column(
-                        children: [
-                          Card(
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                              child: Column(
-                                children: [
-                                  _HeaderRow(a: a, b: b),
-                                  _MoneyRow(
-                                    label: 'Toplam maliyet',
-                                    valueA: a.totalCost,
-                                    valueB: b.totalCost,
-                                    emphasize: true,
-                                  ),
-                                  _MoneyRow(
-                                    label: 'Çekilecek kredi',
-                                    valueA: a.loanAmount,
-                                    valueB: b.loanAmount,
-                                    emphasize: true,
-                                    zeroLabel: 'Yok',
-                                  ),
-                                  _MoneyRow(
-                                    label: 'Ev fiyatı',
-                                    valueA: a.price,
-                                    valueB: b.price,
-                                  ),
-                                  _CompareRow(
-                                    label: 'Aylık faiz',
-                                    cellA: _ValueCell(
-                                      text: Formatters.formatPercent(
-                                          a.interestRate),
-                                      alignRight: false,
-                                    ),
-                                    cellB: _ValueCell(
-                                      text: Formatters.formatPercent(
-                                          b.interestRate),
-                                      alignRight: true,
-                                    ),
-                                    isLast: true,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          Card(
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'VADELER VE AYLIK ÖDEME',
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.1 * 11,
-                                      color: AppColors.muted,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  _PaymentRow(
-                                    label: sameTerms
-                                        ? '${a.term1} ay vade'
-                                        : '1. vade',
-                                    monthsA: a.term1,
-                                    monthsB: b.term1,
-                                    paymentA: a.paymentTerm1,
-                                    paymentB: b.paymentTerm1,
-                                    totalA: a.totalPaymentTerm1,
-                                    totalB: b.totalPaymentTerm1,
-                                    showMonths: !sameTerms,
-                                  ),
-                                  _PaymentRow(
-                                    label: sameTerms
-                                        ? '${a.term2} ay vade'
-                                        : '2. vade',
-                                    monthsA: a.term2,
-                                    monthsB: b.term2,
-                                    paymentA: a.paymentTerm2,
-                                    paymentB: b.paymentTerm2,
-                                    totalA: a.totalPaymentTerm2,
-                                    totalB: b.totalPaymentTerm2,
-                                    showMonths: !sameTerms,
-                                    isLast: true,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          _Summary(a: a, b: b, sameTerms: sameTerms),
-                        ],
-                      ),
-                    ),
-                  ),
+                  Expanded(child: CompareHomesView(a: a, b: b)),
                 ],
               ),
             ),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../providers/homes_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/ad_banner_placeholder.dart';
 import '../widgets/money_input.dart';
 import '../widgets/segment_control.dart';
 import '../widgets/hero_card.dart';
@@ -11,7 +13,7 @@ import '../widgets/cost_breakdown.dart';
 import '../widgets/text_input.dart';
 import '../widgets/interest_rate_input.dart';
 
-class CalculatorScreen extends StatelessWidget {
+class CalculatorScreen extends StatefulWidget {
   final VoidCallback onSave;
   final VoidCallback onNew;
 
@@ -20,6 +22,48 @@ class CalculatorScreen extends StatelessWidget {
     required this.onSave,
     required this.onNew,
   });
+
+  @override
+  State<CalculatorScreen> createState() => _CalculatorScreenState();
+}
+
+class _CalculatorScreenState extends State<CalculatorScreen> {
+  final _scrollController = ScrollController();
+  final _parkKey = GlobalKey();
+  bool _parked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_updatePark);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updatePark());
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_updatePark);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _updatePark() {
+    if (!mounted) return;
+    final auth = context.read<AuthProvider>();
+    if (!auth.showStickyCalculatorAd) return;
+
+    final ctx = _parkKey.currentContext;
+    if (ctx == null) return;
+    final box = ctx.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+
+    final top = box.localToGlobal(Offset.zero).dy;
+    final screenH = MediaQuery.sizeOf(context).height;
+    final stickLine = screenH - 140;
+    final shouldPark = top <= stickLine;
+    if (shouldPark != _parked) {
+      setState(() => _parked = shouldPark);
+    }
+  }
 
   String? _getWarningMessage(double price, double loanAmount) {
     if (price <= 0) {
@@ -32,6 +76,10 @@ class CalculatorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final sticky = auth.showStickyCalculatorAd;
+    final fixed = auth.showFixedCalculatorAd;
+
     return Consumer<HomesProvider>(
       builder: (context, provider, _) {
         final home = provider.tempHome;
@@ -41,36 +89,31 @@ class CalculatorScreen extends StatelessWidget {
           children: [
             Expanded(
               child: SingleChildScrollView(
+                controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
                 child: Column(
                   children: [
-                    // Ev fiyatı
                     MoneyInput(
                       label: 'Evin fiyatı',
                       value: home.price,
                       onChanged: (v) => provider.updateTempHome(price: v),
                     ),
                     const SizedBox(height: 14),
-
-                    // Elindeki nakit
                     MoneyInput(
                       label: 'Elindeki nakit',
                       value: home.cash,
                       onChanged: (v) => provider.updateTempHome(cash: v),
                     ),
                     const SizedBox(height: 14),
-
-                    // Tadilat masrafı
                     MoneyInput(
                       label: 'Tadilat masrafı',
                       value: home.reno,
                       onChanged: (v) => provider.updateTempHome(reno: v),
-                      hint: 'Vergi ve emlakçı komisyonuna girmez; toplam maliyete ve krediye eklenir.',
+                      hint:
+                          'Vergi ve emlakçı komisyonuna girmez; toplam maliyete ve krediye eklenir.',
                     ),
                     const SizedBox(height: 14),
-
-                    // Alım-satım vergisi
                     SegmentControl<double>(
                       label: 'Alım-satım vergisi',
                       options: const [
@@ -81,8 +124,6 @@ class CalculatorScreen extends StatelessWidget {
                       onChanged: (v) => provider.updateTempHome(taxRate: v),
                     ),
                     const SizedBox(height: 14),
-
-                    // Emlakçı komisyonu
                     SegmentControl<double>(
                       label: 'Emlakçı komisyonu',
                       options: const [
@@ -93,15 +134,12 @@ class CalculatorScreen extends StatelessWidget {
                       onChanged: (v) => provider.updateTempHome(commRate: v),
                     ),
                     const SizedBox(height: 14),
-
-                    // Aylık faiz oranı (slider + manuel giriş)
                     InterestRateInput(
                       value: home.interestRate,
-                      onChanged: (v) => provider.updateTempHome(interestRate: v),
+                      onChanged: (v) =>
+                          provider.updateTempHome(interestRate: v),
                     ),
                     const SizedBox(height: 14),
-
-                    // Hero kart - Kredi bilgisi
                     HeroCard(
                       loanAmount: home.loanAmount,
                       totalCost: home.totalCost,
@@ -109,8 +147,6 @@ class CalculatorScreen extends StatelessWidget {
                       hasValidInput: home.hasValidInput,
                     ),
                     const SizedBox(height: 14),
-
-                    // Ödeme planları (düzenlenebilir vadeler)
                     PaymentCardsRow(
                       term1: home.term1,
                       term2: home.term2,
@@ -123,8 +159,6 @@ class CalculatorScreen extends StatelessWidget {
                       onTerm2Changed: (v) => provider.updateTempHome(term2: v),
                     ),
                     const SizedBox(height: 14),
-
-                    // Maliyet kırılımı
                     CostBreakdown(
                       home: home,
                       warningMessage: warningMessage,
@@ -132,9 +166,30 @@ class CalculatorScreen extends StatelessWidget {
                       onRemoveCost: provider.removeCost,
                       onUpdateCostAmount: provider.updateCostAmount,
                     ),
-                    const SizedBox(height: 14),
 
-                    // İlan linki
+                    // Girişli: maliyet kırılımı altında sabit
+                    if (fixed) ...[
+                      const SizedBox(height: 14),
+                      const AdBannerPlaceholder(
+                        label: 'Hesap · maliyet kırılımı altı (sabit)',
+                      ),
+                    ],
+
+                    // Misafir: park noktası (sticky buraya gelince sabitlenir)
+                    if (sticky) ...[
+                      const SizedBox(height: 14),
+                      KeyedSubtree(
+                        key: _parkKey,
+                        child: _parked
+                            ? const SizedBox(height: 56)
+                            : const AdBannerPlaceholder(
+                                label: 'Hesap · maliyet kırılımı altı',
+                                compact: true,
+                              ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 14),
                     TextInputCard(
                       label: 'İlan linki',
                       value: home.link,
@@ -143,8 +198,6 @@ class CalculatorScreen extends StatelessWidget {
                       keyboardType: TextInputType.url,
                     ),
                     const SizedBox(height: 14),
-
-                    // Başlık
                     TextInputCard(
                       label: 'Başlık',
                       value: home.title,
@@ -152,8 +205,6 @@ class CalculatorScreen extends StatelessWidget {
                       placeholder: 'Örn. Caddebostan deniz manzara',
                     ),
                     const SizedBox(height: 14),
-
-                    // Footer
                     Text(
                       'Sadece planlama içindir. Banka teklifi farklılık gösterebilir.',
                       style: GoogleFonts.outfit(
@@ -167,7 +218,25 @@ class CalculatorScreen extends StatelessWidget {
               ),
             ),
 
-            // Alt bar - gölgesiz, belirgin çerçeveli
+            // Misafir sticky: her zaman Kaydet üstünde takip / park sonrası sabit
+            if (sticky)
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFEFE6D8),
+                  border: Border(
+                    top: BorderSide(color: AppColors.line, width: 1),
+                  ),
+                ),
+                padding: const EdgeInsets.fromLTRB(18, 8, 18, 8),
+                child: AdBannerPlaceholder(
+                  label: _parked
+                      ? 'Hesap · sabit (maliyet altı)'
+                      : 'Hesap · scroll takip',
+                  compact: true,
+                ),
+              ),
+
             Container(
               padding: EdgeInsets.fromLTRB(
                 18,
@@ -175,19 +244,23 @@ class CalculatorScreen extends StatelessWidget {
                 18,
                 12 + MediaQuery.of(context).padding.bottom,
               ),
-              decoration: const BoxDecoration(
-                color: Color(0xFFEFE6D8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFE6D8),
                 border: Border(
-                  top: BorderSide(color: AppColors.line, width: 1),
+                  top: BorderSide(
+                    color: sticky ? Colors.transparent : AppColors.line,
+                    width: 1,
+                  ),
                 ),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: onNew,
+                      onPressed: widget.onNew,
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.forest, width: 1.5),
+                        side: const BorderSide(
+                            color: AppColors.forest, width: 1.5),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       child: const Text('Yeni ev'),
@@ -197,12 +270,13 @@ class CalculatorScreen extends StatelessWidget {
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
-                      onPressed: onSave,
+                      onPressed: widget.onSave,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
-                          side: const BorderSide(color: AppColors.forest, width: 1.5),
+                          side: const BorderSide(
+                              color: AppColors.forest, width: 1.5),
                         ),
                       ),
                       child: const Text('Kaydet'),
