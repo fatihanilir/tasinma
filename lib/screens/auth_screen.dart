@@ -76,9 +76,8 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      widget.forSave
-                          ? 'Kaydetmek için giriş yapman gerekiyor.'
-                          : 'Evin fiyatını değil, gerçek maliyetini hesapla.',
+                      'İlandaki fiyatı değil, hesabınızdan çıkması gereken gerçek maliyeti hesaplayın.\n'
+                      'Sürpriz giderlerle karşılaşmamak ve bütçenizi doğru planlamak için yanınızdayız.',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: 15,
@@ -119,22 +118,25 @@ class _AuthScreenState extends State<AuthScreen> {
                                 textColor: Colors.white,
                                 onTap: () => setState(() => _showEmailForm = true),
                               ),
-                              if (!widget.forSave) ...[
-                                const SizedBox(height: 20),
-                                TextButton(
-                                  onPressed: () async {
-                                    await auth.continueAsGuest();
-                                  },
-                                  child: Text(
-                                    'Hesapsız devam et',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.forest2,
-                                    ),
+                              const SizedBox(height: 20),
+                              TextButton(
+                                onPressed: () async {
+                                  await auth.continueAsGuest();
+                                  if (!mounted) return;
+                                  // Üstten "Giriş" ile açıldıysa ekranı kapat
+                                  if (Navigator.canPop(context)) {
+                                    Navigator.pop(context, false);
+                                  }
+                                },
+                                child: Text(
+                                  'Hesapsız devam et',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.forest2,
                                   ),
                                 ),
-                              ],
+                              ),
                             ] else ...[
                               TextField(
                                 controller: _emailController,
@@ -201,7 +203,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     const SizedBox(height: 32),
                     Text(
-                      'Kişisel veri istemiyoruz.\nSadece hesaplamalarını kaydetmek için.',
+                      'Hesaplamalarınızı kaydetmek için giriş yapabilirsiniz.',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: 12,

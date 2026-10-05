@@ -44,8 +44,10 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _init() async {
+    // Misafir bayrağı kalıcı değil: her açılışta giriş ekranı gelsin.
     final prefs = await SharedPreferences.getInstance();
-    _guestContinued = prefs.getBool(_guestKey) ?? false;
+    await prefs.remove(_guestKey);
+    _guestContinued = false;
 
     _authService.authStateChanges.listen((user) {
       _user = user;
@@ -61,8 +63,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> continueAsGuest() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_guestKey, true);
+    // Sadece bu oturum; sayfa yenilenince tekrar giriş ekranı açılır.
     _guestContinued = true;
     _status = AuthStatus.unauthenticated;
     notifyListeners();
