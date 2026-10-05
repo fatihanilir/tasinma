@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/home_model.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
@@ -57,8 +58,8 @@ class CompareHomesView extends StatelessWidget {
                       text: Formatters.formatPercent(b.interestRate),
                       alignRight: true,
                     ),
-                    isLast: true,
                   ),
+                  _LinkRow(homeA: a, homeB: b),
                 ],
               ),
             ),
@@ -165,6 +166,60 @@ class CompareHomesScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _LinkRow extends StatelessWidget {
+  final HomeModel homeA;
+  final HomeModel homeB;
+
+  const _LinkRow({required this.homeA, required this.homeB});
+
+  Future<void> _open(HomeModel home) async {
+    if (!home.hasLink) return;
+    final uri = Uri.tryParse(home.normalizedLink);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Widget _link(HomeModel home, {required bool alignRight}) {
+    if (!home.hasLink) {
+      return Text(
+        '—',
+        textAlign: alignRight ? TextAlign.right : TextAlign.left,
+        style: GoogleFonts.outfit(
+          fontSize: 13,
+          color: AppColors.muted,
+        ),
+      );
+    }
+    return Align(
+      alignment: alignRight ? Alignment.centerRight : Alignment.centerLeft,
+      child: GestureDetector(
+        onTap: () => _open(home),
+        child: Text(
+          'İlanı gör',
+          textAlign: alignRight ? TextAlign.right : TextAlign.left,
+          style: GoogleFonts.outfit(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.forest2,
+            decoration: TextDecoration.underline,
+            decorationColor: AppColors.forest2,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _CompareRow(
+      label: 'İlan',
+      isLast: true,
+      cellA: _link(homeA, alignRight: false),
+      cellB: _link(homeB, alignRight: true),
     );
   }
 }
