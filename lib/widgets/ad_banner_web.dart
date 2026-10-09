@@ -66,9 +66,19 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
         ..style.justifyContent = 'center'
         ..style.pointerEvents = 'none'
         ..style.zIndex = '0';
-      fallback.innerHTML =
-          '<div style="font:700 11px system-ui,sans-serif;letter-spacing:1px;color:#5D6B64;">REKLAM</div>'
-          '<div style="font:400 11px system-ui,sans-serif;color:#5D6B64;opacity:.7;margin-top:4px;">AdSense</div>';
+      final title = web.HTMLDivElement()
+        ..textContent = 'REKLAM'
+        ..style.font = '700 11px system-ui,sans-serif'
+        ..style.letterSpacing = '1px'
+        ..style.color = '#5D6B64';
+      final sub = web.HTMLDivElement()
+        ..textContent = 'AdSense'
+        ..style.font = '400 11px system-ui,sans-serif'
+        ..style.color = '#5D6B64'
+        ..style.opacity = '0.7'
+        ..style.marginTop = '4px';
+      fallback.append(title);
+      fallback.append(sub);
       host.append(fallback);
 
       final ins = web.document.createElement('ins') as web.HTMLElement;
