@@ -12,7 +12,8 @@ export 'ad_unit.dart';
 @JS('eval')
 external JSAny? _jsEval(String code);
 
-/// Web: Google AdSense — Google snippet + HTML içinde yedek "Reklam" yazısı.
+/// Web: Google AdSense birimi. Kutunun yüksekliği reklamın gerçek
+/// yüksekliğini takip eder; reklam dolmazsa alan tamamen kapanır.
 class AdBannerPlaceholder extends StatefulWidget {
   final String label;
   final bool compact;
@@ -31,60 +32,49 @@ class AdBannerPlaceholder extends StatefulWidget {
 
 class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
   late final String _viewType;
-  var _ready = false;
-  Timer? _retryTimer;
+  late double _height;
+  bool _unfilled = false;
+  web.HTMLElement? _ins;
+  web.ResizeObserver? _observer;
+  Timer? _pushTimer;
+  Timer? _statusTimer;
 
-  double get _height {
-    if (widget.compact) return 90;
-    return widget.unit.minHeight;
+  double get _minHeight => widget.compact ? 90 : widget.unit.minHeight;
+
+  double get _maxHeight {
+    if (widget.compact) return 100;
+    switch (widget.unit) {
+      case AdUnit.display:
+        return 100;
+      case AdUnit.inArticle:
+        return 420;
+      case AdUnit.multiplex:
+        return 900;
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    final heightPx = _height.round();
+    _height = _minHeight;
     final unit = widget.unit;
     _viewType =
         'adsense-${unit.slot}-${identityHashCode(this)}-${DateTime.now().microsecondsSinceEpoch}';
 
     ui_web.platformViewRegistry.registerViewFactory(_viewType, (int viewId) {
-      final host = web.HTMLDivElement()
-        ..style.width = '100%'
-        ..style.height = '${heightPx}px'
-        ..style.position = 'relative'
-        ..style.overflow = 'hidden'
-        ..style.backgroundColor = '#F0EBE1'
-        ..style.borderRadius = '14px';
-
-      // AdSense dolmazsa görünsün diye HTML fallback
-      final fallback = web.HTMLDivElement()
-        ..style.position = 'absolute'
-        ..style.inset = '0'
-        ..style.display = 'flex'
-        ..style.flexDirection = 'column'
-        ..style.alignItems = 'center'
-        ..style.justifyContent = 'center'
-        ..style.pointerEvents = 'none'
-        ..style.zIndex = '0';
-      final title = web.HTMLDivElement()
-        ..textContent = 'REKLAM'
-        ..style.font = '700 11px system-ui,sans-serif'
-        ..style.letterSpacing = '1px'
-        ..style.color = '#5D6B64';
-      final sub = web.HTMLDivElement()
-        ..textContent = 'AdSense'
-        ..style.font = '400 11px system-ui,sans-serif'
-        ..style.color = '#5D6B64'
-        ..style.opacity = '0.7'
-        ..style.marginTop = '4px';
-      fallback.append(title);
-      fallback.append(sub);
-      host.append(fallback);
+      final host = web.HTMLDivElement();
+      // AdSense ebeveynlerin yüksekliğini "auto" yapabiliyor; kutu Flutter'ın
+      // verdiği boyutun dışına taşmasın.
+      host.style
+        ..setProperty('width', '100%', 'important')
+        ..setProperty('height', '100%', 'important')
+        ..setProperty('overflow', 'hidden', 'important')
+        ..setProperty('display', 'flex')
+        ..setProperty('justify-content', 'center')
+        ..setProperty('align-items', 'flex-start');
 
       final ins = web.document.createElement('ins') as web.HTMLElement;
       ins.className = 'adsbygoogle';
-      ins.style.position = 'relative';
-      ins.style.zIndex = '1';
       ins.setAttribute('data-ad-client', AdUnit.client);
       ins.setAttribute('data-ad-slot', unit.slot);
 
@@ -106,29 +96,54 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
           ins.setAttribute('data-ad-format', 'autorelaxed');
       }
 
-      // Ortala
-      final wrap = web.HTMLDivElement()
-        ..style.position = 'relative'
-        ..style.zIndex = '1'
-        ..style.width = '100%'
-        ..style.height = '100%'
-        ..style.display = 'flex'
-        ..style.justifyContent = 'center'
-        ..style.alignItems = 'center';
-      wrap.append(ins);
-      host.append(wrap);
-
+      host.append(ins);
+      _ins = ins;
+      _observeIns(ins);
       _schedulePush(attempt: 0);
+      _watchStatus();
       return host;
     });
+  }
 
-    setState(() => _ready = true);
+  void _observeIns(web.HTMLElement ins) {
+    _observer = web.ResizeObserver(
+      ((JSArray<web.ResizeObserverEntry> _, web.ResizeObserver _) {
+        _syncHeight();
+      }).toJS,
+    );
+    _observer!.observe(ins);
+  }
+
+  void _syncHeight() {
+    final ins = _ins;
+    if (ins == null || !mounted || _unfilled) return;
+    final h = ins.offsetHeight.toDouble();
+    if (h <= 0) return;
+    final next = h.clamp(_minHeight, _maxHeight).toDouble();
+    if ((next - _height).abs() >= 1) {
+      setState(() => _height = next);
+    }
+  }
+
+  void _watchStatus() {
+    var ticks = 0;
+    _statusTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      ticks++;
+      final status = _ins?.getAttribute('data-ad-status');
+      if (status == 'unfilled') {
+        t.cancel();
+        if (mounted) setState(() => _unfilled = true);
+        return;
+      }
+      if (status == 'filled') _syncHeight();
+      if (ticks > 30) t.cancel();
+    });
   }
 
   void _schedulePush({required int attempt}) {
-    _retryTimer?.cancel();
+    _pushTimer?.cancel();
     if (attempt > 10) return;
-    _retryTimer = Timer(Duration(milliseconds: 250 + attempt * 350), () {
+    _pushTimer = Timer(Duration(milliseconds: 250 + attempt * 350), () {
       if (!mounted) return;
       if (_tryPush()) return;
       _schedulePush(attempt: attempt + 1);
@@ -137,10 +152,7 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
 
   bool _tryPush() {
     try {
-      _jsEval(
-        'if(typeof adsbygoogle==="undefined"){window.adsbygoogle=[];}'
-        '(adsbygoogle=window.adsbygoogle||[]).push({});',
-      );
+      _jsEval('(window.adsbygoogle = window.adsbygoogle || []).push({});');
       return true;
     } catch (_) {
       return false;
@@ -149,23 +161,25 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
 
   @override
   void dispose() {
-    _retryTimer?.cancel();
+    _pushTimer?.cancel();
+    _statusTimer?.cancel();
+    _observer?.disconnect();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final height = _height;
-    if (!_ready) {
-      return SizedBox(width: double.infinity, height: height);
-    }
+    if (_unfilled) return const SizedBox.shrink();
 
     return Semantics(
       label: 'Reklam',
-      child: SizedBox(
-        width: double.infinity,
-        height: height,
-        child: HtmlElementView(viewType: _viewType),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: SizedBox(
+          width: double.infinity,
+          height: _height,
+          child: HtmlElementView(viewType: _viewType),
+        ),
       ),
     );
   }
