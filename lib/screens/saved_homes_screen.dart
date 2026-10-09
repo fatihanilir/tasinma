@@ -167,6 +167,7 @@ class _SavedHomesScreenState extends State<SavedHomesScreen> {
                         const SizedBox(height: 14),
                         const AdBannerPlaceholder(
                           label: 'Kayıtlı evler · boş liste',
+                          unit: AdUnit.inArticle,
                         ),
                       ],
                     ],
@@ -236,8 +237,9 @@ class _SavedHomesScreenState extends State<SavedHomesScreen> {
                         if (index == adListIndex) {
                           return const Padding(
                             padding: EdgeInsets.only(bottom: 14),
-                            child: AdBannerPlaceholder(
+                            child: const AdBannerPlaceholder(
                               label: 'Kayıtlı evler · 2. ilan sonrası',
+                              unit: AdUnit.inArticle,
                             ),
                           );
                         }

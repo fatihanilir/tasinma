@@ -68,6 +68,7 @@ class CompareHomesView extends StatelessWidget {
             const SizedBox(height: 14),
             const AdBannerPlaceholder(
               label: 'Karşılaştır · vadeler kartı üstü',
+              unit: AdUnit.inArticle,
             ),
           ],
           const SizedBox(height: 14),

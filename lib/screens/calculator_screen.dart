@@ -172,6 +172,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       const SizedBox(height: 14),
                       const AdBannerPlaceholder(
                         label: 'Hesap · maliyet kırılımı altı (sabit)',
+                        unit: AdUnit.inArticle,
                       ),
                     ],
 
@@ -184,7 +185,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                             ? const SizedBox(height: 56)
                             : const AdBannerPlaceholder(
                                 label: 'Hesap · maliyet kırılımı altı',
-                                compact: true,
+                                unit: AdUnit.inArticle,
                               ),
                       ),
                     ],
@@ -229,10 +230,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                   ),
                 ),
                 padding: const EdgeInsets.fromLTRB(18, 8, 18, 8),
-                child: AdBannerPlaceholder(
-                  label: _parked
-                      ? 'Hesap · sabit (maliyet altı)'
-                      : 'Hesap · scroll takip',
+                child: const AdBannerPlaceholder(
+                  label: 'Hesap · sticky',
+                  unit: AdUnit.display,
                   compact: true,
                 ),
               ),

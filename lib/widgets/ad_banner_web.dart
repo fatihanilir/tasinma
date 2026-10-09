@@ -4,21 +4,24 @@ import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
 
-const _adClient = 'ca-pub-8974319907510791';
-const _adSlot = '7727699704';
+import 'ad_unit.dart';
+
+export 'ad_unit.dart';
 
 @JS('eval')
 external JSAny? _jsEval(String code);
 
-/// Web: Google AdSense display birimi (home1 · 7727699704).
+/// Web: Google AdSense birimi.
 class AdBannerPlaceholder extends StatefulWidget {
   final String label;
   final bool compact;
+  final AdUnit unit;
 
   const AdBannerPlaceholder({
     super.key,
     this.label = 'Reklam',
     this.compact = false,
+    this.unit = AdUnit.display,
   });
 
   @override
@@ -29,12 +32,18 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
   late final String _viewType;
   var _ready = false;
 
+  double get _height {
+    if (widget.compact) return 56;
+    return widget.unit == AdUnit.inArticle ? 120 : 90;
+  }
+
   @override
   void initState() {
     super.initState();
-    final heightPx = widget.compact ? 56 : 90;
+    final heightPx = _height.round();
+    final unit = widget.unit;
     _viewType =
-        'adsense-home1-${identityHashCode(this)}-${DateTime.now().microsecondsSinceEpoch}';
+        'adsense-${unit.slot}-${identityHashCode(this)}-${DateTime.now().microsecondsSinceEpoch}';
 
     ui_web.platformViewRegistry.registerViewFactory(_viewType, (int viewId) {
       final host = web.HTMLDivElement()
@@ -49,12 +58,22 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
       ins.className = 'adsbygoogle';
       ins.style.display = 'block';
       ins.style.width = '100%';
-      ins.style.height = '${heightPx}px';
-      ins.style.maxWidth = '728px';
-      ins.setAttribute('data-ad-client', _adClient);
-      ins.setAttribute('data-ad-slot', _adSlot);
-      ins.setAttribute('data-ad-format', 'horizontal');
-      ins.setAttribute('data-full-width-responsive', 'true');
+      ins.style.textAlign = 'center';
+      if (unit == AdUnit.inArticle) {
+        ins.style.minHeight = '${heightPx}px';
+      } else {
+        ins.style.height = '${heightPx}px';
+        ins.style.maxWidth = '728px';
+      }
+      ins.setAttribute('data-ad-client', AdUnit.client);
+      ins.setAttribute('data-ad-slot', unit.slot);
+      ins.setAttribute('data-ad-format', unit.format);
+      if (unit.layout != null) {
+        ins.setAttribute('data-ad-layout', unit.layout!);
+      }
+      if (unit == AdUnit.display) {
+        ins.setAttribute('data-full-width-responsive', 'true');
+      }
       host.append(ins);
 
       web.window.setTimeout(
@@ -84,7 +103,7 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
 
   @override
   Widget build(BuildContext context) {
-    final height = widget.compact ? 56.0 : 90.0;
+    final height = _height;
     if (!_ready) {
       return SizedBox(width: double.infinity, height: height);
     }
