@@ -3,10 +3,8 @@ import 'dart:js_interop';
 import 'dart:ui_web' as ui_web;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:web/web.dart' as web;
 
-import '../theme/app_theme.dart';
 import 'ad_unit.dart';
 
 export 'ad_unit.dart';
@@ -14,7 +12,7 @@ export 'ad_unit.dart';
 @JS('eval')
 external JSAny? _jsEval(String code);
 
-/// Web: Google AdSense — Google'ın verdiği snippet ile birebir.
+/// Web: Google AdSense — Google snippet + HTML içinde yedek "Reklam" yazısı.
 class AdBannerPlaceholder extends StatefulWidget {
   final String label;
   final bool compact;
@@ -53,17 +51,33 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
       final host = web.HTMLDivElement()
         ..style.width = '100%'
         ..style.height = '${heightPx}px'
+        ..style.position = 'relative'
+        ..style.overflow = 'hidden'
+        ..style.backgroundColor = '#F0EBE1'
+        ..style.borderRadius = '14px';
+
+      // AdSense dolmazsa görünsün diye HTML fallback
+      final fallback = web.HTMLDivElement()
+        ..style.position = 'absolute'
+        ..style.inset = '0'
         ..style.display = 'flex'
-        ..style.justifyContent = 'center'
+        ..style.flexDirection = 'column'
         ..style.alignItems = 'center'
-        ..style.backgroundColor = '#F0EBE1';
+        ..style.justifyContent = 'center'
+        ..style.pointerEvents = 'none'
+        ..style.zIndex = '0';
+      fallback.innerHTML =
+          '<div style="font:700 11px system-ui,sans-serif;letter-spacing:1px;color:#5D6B64;">REKLAM</div>'
+          '<div style="font:400 11px system-ui,sans-serif;color:#5D6B64;opacity:.7;margin-top:4px;">AdSense</div>';
+      host.append(fallback);
 
       final ins = web.document.createElement('ins') as web.HTMLElement;
       ins.className = 'adsbygoogle';
+      ins.style.position = 'relative';
+      ins.style.zIndex = '1';
       ins.setAttribute('data-ad-client', AdUnit.client);
       ins.setAttribute('data-ad-slot', unit.slot);
 
-      // Google snippet ile birebir attribute'lar
       switch (unit) {
         case AdUnit.display:
           ins.style.display = 'inline-block';
@@ -82,11 +96,19 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
           ins.setAttribute('data-ad-format', 'autorelaxed');
       }
 
-      host.append(ins);
+      // Ortala
+      final wrap = web.HTMLDivElement()
+        ..style.position = 'relative'
+        ..style.zIndex = '1'
+        ..style.width = '100%'
+        ..style.height = '100%'
+        ..style.display = 'flex'
+        ..style.justifyContent = 'center'
+        ..style.alignItems = 'center';
+      wrap.append(ins);
+      host.append(wrap);
 
-      // Script + DOM hazır olunca push (birkaç deneme)
       _schedulePush(attempt: 0);
-
       return host;
     });
 
@@ -95,8 +117,8 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
 
   void _schedulePush({required int attempt}) {
     _retryTimer?.cancel();
-    if (attempt > 8) return;
-    _retryTimer = Timer(Duration(milliseconds: 200 + attempt * 300), () {
+    if (attempt > 10) return;
+    _retryTimer = Timer(Duration(milliseconds: 250 + attempt * 350), () {
       if (!mounted) return;
       if (_tryPush()) return;
       _schedulePush(attempt: attempt + 1);
@@ -105,12 +127,11 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
 
   bool _tryPush() {
     try {
-      final ready = _jsEval(
-        'typeof window.adsbygoogle !== "undefined"',
+      _jsEval(
+        'if(typeof adsbygoogle==="undefined"){window.adsbygoogle=[];}'
+        '(adsbygoogle=window.adsbygoogle||[]).push({});',
       );
-      // JS true → continue
-      _jsEval('(window.adsbygoogle = window.adsbygoogle || []).push({});');
-      return ready != null;
+      return true;
     } catch (_) {
       return false;
     }
@@ -125,51 +146,16 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
   @override
   Widget build(BuildContext context) {
     final height = _height;
+    if (!_ready) {
+      return SizedBox(width: double.infinity, height: height);
+    }
 
-    // Boş görünmesin: altta "Reklam" yeri, üstte AdSense platform view
     return Semantics(
       label: 'Reklam',
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: SizedBox(
-          width: double.infinity,
-          height: height,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: double.infinity,
-                height: height,
-                color: const Color(0xFFF0EBE1),
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'REKLAM',
-                      style: GoogleFonts.outfit(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1,
-                        color: AppColors.muted.withValues(alpha: 0.55),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Yükleniyor…',
-                      style: GoogleFonts.outfit(
-                        fontSize: 11,
-                        color: AppColors.muted.withValues(alpha: 0.45),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (_ready)
-                HtmlElementView(viewType: _viewType),
-            ],
-          ),
-        ),
+      child: SizedBox(
+        width: double.infinity,
+        height: height,
+        child: HtmlElementView(viewType: _viewType),
       ),
     );
   }

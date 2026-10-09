@@ -176,17 +176,16 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       ),
                     ],
 
-                    // Misafir: park noktası (sticky buraya gelince sabitlenir)
+                    // Misafir: maliyet kırılımı altında içerik reklamı
+                    // (sticky Kaydet üstünde ayrıca display gösterilir)
                     if (sticky) ...[
                       const SizedBox(height: 14),
                       KeyedSubtree(
                         key: _parkKey,
-                        child: _parked
-                            ? const SizedBox(height: 56)
-                            : const AdBannerPlaceholder(
-                                label: 'Hesap · maliyet kırılımı altı',
-                                unit: AdUnit.inArticle,
-                              ),
+                        child: const AdBannerPlaceholder(
+                          label: 'Hesap · maliyet kırılımı altı',
+                          unit: AdUnit.inArticle,
+                        ),
                       ),
                     ],
 
