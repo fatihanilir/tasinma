@@ -115,6 +115,13 @@ class CompareHomesView extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _Summary(a: a, b: b, sameTerms: sameTerms),
+          if (showAds) ...[
+            const SizedBox(height: 14),
+            const AdBannerPlaceholder(
+              label: 'Karşılaştır · özet altı',
+              unit: AdUnit.multiplex,
+            ),
+          ],
         ],
       ),
     );

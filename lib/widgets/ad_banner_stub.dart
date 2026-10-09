@@ -20,9 +20,7 @@ class AdBannerPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final height = compact
-        ? 56.0
-        : (unit == AdUnit.inArticle ? 120.0 : 90.0);
+    final height = compact ? 56.0 : unit.minHeight;
     return Semantics(
       label: 'Reklam alanı',
       child: Container(
@@ -35,7 +33,8 @@ class AdBannerPlaceholder extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            label,
+            '$label\n(${unit.name})',
+            textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               fontSize: 12,
               color: AppColors.muted,

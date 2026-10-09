@@ -167,7 +167,7 @@ class _SavedHomesScreenState extends State<SavedHomesScreen> {
                         const SizedBox(height: 14),
                         const AdBannerPlaceholder(
                           label: 'Kayıtlı evler · boş liste',
-                          unit: AdUnit.inArticle,
+                          unit: AdUnit.multiplex,
                         ),
                       ],
                     ],

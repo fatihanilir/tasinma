@@ -34,7 +34,7 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
 
   double get _height {
     if (widget.compact) return 56;
-    return widget.unit == AdUnit.inArticle ? 120 : 90;
+    return widget.unit.minHeight;
   }
 
   @override
@@ -48,31 +48,35 @@ class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
     ui_web.platformViewRegistry.registerViewFactory(_viewType, (int viewId) {
       final host = web.HTMLDivElement()
         ..style.width = '100%'
-        ..style.height = '${heightPx}px'
+        ..style.minHeight = '${heightPx}px'
         ..style.overflow = 'hidden'
         ..style.display = 'flex'
         ..style.justifyContent = 'center'
-        ..style.alignItems = 'center';
+        ..style.alignItems = 'flex-start';
 
       final ins = web.document.createElement('ins') as web.HTMLElement;
       ins.className = 'adsbygoogle';
       ins.style.display = 'block';
       ins.style.width = '100%';
-      ins.style.textAlign = 'center';
-      if (unit == AdUnit.inArticle) {
-        ins.style.minHeight = '${heightPx}px';
-      } else {
-        ins.style.height = '${heightPx}px';
-        ins.style.maxWidth = '728px';
+
+      switch (unit) {
+        case AdUnit.display:
+          ins.style.height = '${heightPx}px';
+          ins.style.maxWidth = '728px';
+          ins.style.textAlign = 'center';
+          ins.setAttribute('data-full-width-responsive', 'true');
+        case AdUnit.inArticle:
+          ins.style.textAlign = 'center';
+          ins.style.minHeight = '${heightPx}px';
+        case AdUnit.multiplex:
+          ins.style.minHeight = '${heightPx}px';
       }
+
       ins.setAttribute('data-ad-client', AdUnit.client);
       ins.setAttribute('data-ad-slot', unit.slot);
       ins.setAttribute('data-ad-format', unit.format);
       if (unit.layout != null) {
         ins.setAttribute('data-ad-layout', unit.layout!);
-      }
-      if (unit == AdUnit.display) {
-        ins.setAttribute('data-full-width-responsive', 'true');
       }
       host.append(ins);
 
