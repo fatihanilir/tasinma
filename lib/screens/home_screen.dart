@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import '../providers/homes_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/page_reload.dart';
+import '../widgets/account_sheet.dart';
 import 'auth_screen.dart';
 import 'calculator_screen.dart';
 import 'saved_homes_screen.dart';
@@ -147,11 +148,6 @@ class _HomeScreenState extends State<HomeScreen> {
     await context.read<HomesProvider>().refresh();
   }
 
-  Future<void> _onSignOut() async {
-    await context.read<AuthProvider>().signOut();
-    context.read<HomesProvider>().setCloudMode(false);
-  }
-
   String? get _pageLead {
     if (_currentTab == 1) return null;
     return 'İlandaki fiyatı değil, evin gerçek maliyetini hesaplayalım.';
@@ -288,36 +284,47 @@ class _HomeScreenState extends State<HomeScreen> {
                                       },
                                     ),
                                   ),
-                                  // Girişli ise çıkış, misafirse giriş
                                   Consumer<AuthProvider>(
                                     builder: (context, auth, _) {
-                                      if (auth.isAuthenticated) {
-                                        return GestureDetector(
-                                          onTap: _onSignOut,
-                                          child: const Icon(
-                                            Icons.logout_rounded,
-                                            size: 20,
-                                            color: AppColors.muted,
-                                          ),
-                                        );
-                                      }
-                                      return GestureDetector(
-                                        onTap: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (_) => const AuthScreen(),
-                                              fullscreenDialog: true,
+                                      return Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (!auth.isAuthenticated)
+                                            GestureDetector(
+                                              onTap: () {
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        const AuthScreen(),
+                                                    fullscreenDialog: true,
+                                                  ),
+                                                );
+                                              },
+                                              child: Text(
+                                                'Giriş',
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColors.forest,
+                                                ),
+                                              ),
                                             ),
-                                          );
-                                        },
-                                        child: Text(
-                                          'Giriş',
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.forest,
+                                          IconButton(
+                                            tooltip: 'Menü',
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            onPressed: () =>
+                                                showAccountSheet(context),
+                                            icon: Icon(
+                                              auth.isAuthenticated
+                                                  ? Icons
+                                                        .account_circle_outlined
+                                                  : Icons.menu_rounded,
+                                              size: 24,
+                                              color: AppColors.forest,
+                                            ),
                                           ),
-                                        ),
+                                        ],
                                       );
                                     },
                                   ),

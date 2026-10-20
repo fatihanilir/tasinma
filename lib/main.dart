@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/homes_provider.dart';
 import 'screens/auth_screen.dart';
+import 'screens/consent_screen.dart';
 import 'screens/home_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -56,6 +57,9 @@ class AuthGate extends StatelessWidget {
           homes.setCloudMode(auth.isAuthenticated);
         });
 
+        if (auth.needsConsent) {
+          return const ConsentScreen();
+        }
         if (auth.canUseApp) {
           return const HomeScreen();
         }

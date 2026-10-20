@@ -1,8 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_links.dart';
 
 class AuthScreen extends StatefulWidget {
   final bool forSave;
@@ -34,7 +36,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _handleSuccess(bool ok) async {
     if (!ok || !mounted) return;
     widget.onSuccess?.call();
-    if (widget.forSave && Navigator.canPop(context)) {
+    if (Navigator.canPop(context)) {
       Navigator.pop(context, true);
     }
   }
@@ -99,6 +101,11 @@ class _AuthScreenState extends State<AuthScreen> {
 
                         return Column(
                           children: [
+                            ConsentCheckbox(
+                              value: auth.consentChecked,
+                              onChanged: auth.setConsentChecked,
+                            ),
+                            const SizedBox(height: 16),
                             if (!_showEmailForm) ...[
                               _SignInButton(
                                 label: 'Google ile devam et',
@@ -217,6 +224,75 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class ConsentCheckbox extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const ConsentCheckbox({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final base = GoogleFonts.outfit(
+      fontSize: 13,
+      color: AppColors.ink,
+      height: 1.45,
+    );
+    final link = base.copyWith(
+      color: AppColors.forest,
+      fontWeight: FontWeight.w600,
+      decoration: TextDecoration.underline,
+    );
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => onChanged(!value),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 28,
+            height: 24,
+            child: Checkbox(
+              value: value,
+              activeColor: AppColors.forest,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              onChanged: (v) => onChanged(v ?? false),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                style: base,
+                children: [
+                  TextSpan(
+                    text: 'Gizlilik Politikası',
+                    style: link,
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () => AppLinks.open(AppLinks.privacy),
+                  ),
+                  const TextSpan(text: ' ve '),
+                  TextSpan(
+                    text: 'Kullanım Koşulları',
+                    style: link,
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () => AppLinks.open(AppLinks.terms),
+                  ),
+                  const TextSpan(text: '\'nı okudum, onaylıyorum.'),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

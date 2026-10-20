@@ -51,6 +51,47 @@ class AuthService {
     await _auth.signOut();
   }
 
+  String? get signInProvider {
+    final providers = currentUser?.providerData ?? const [];
+    return providers.isEmpty ? null : providers.first.providerId;
+  }
+
+  /// Hesap silme öncesi Firebase yakın tarihli giriş ister.
+  Future<void> reauthenticate({String? password}) async {
+    final user = currentUser;
+    if (user == null) return;
+    if (signInProvider == 'password') {
+      await user.reauthenticateWithCredential(
+        EmailAuthProvider.credential(email: user.email!, password: password!),
+      );
+      return;
+    }
+    if (signInProvider == 'google.com') {
+      if (kIsWeb) {
+        await user.reauthenticateWithPopup(GoogleAuthProvider());
+        return;
+      }
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        throw FirebaseAuthException(code: 'reauth-cancelled');
+      }
+      final googleAuth = await googleUser.authentication;
+      await user.reauthenticateWithCredential(
+        GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        ),
+      );
+    }
+  }
+
+  Future<void> deleteCurrentUser() async {
+    await currentUser?.delete();
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {}
+  }
+
   /// Apple web için ayrı Firebase + Apple Developer kurulumu gerekir.
   bool get isAppleSignInAvailable => !kIsWeb;
 }
