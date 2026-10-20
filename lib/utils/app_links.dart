@@ -11,6 +11,12 @@ class AppLinks {
   static const String accountDeletion = '$site/hesap-silme';
   static const String analyticsConsole =
       'https://console.firebase.google.com/project/cebinden-eve/analytics';
+  static const String authConsole =
+      'https://console.firebase.google.com/project/cebinden-eve/authentication/users';
+
+  /// Firebase App Check (web) için reCAPTCHA Enterprise site anahtarı.
+  /// Boşken App Check devre dışı kalır.
+  static const String recaptchaSiteKey = '';
 
   /// Metinler değişince artırılır; kullanıcılardan yeniden onay istenir.
   static const int legalVersion = 1;

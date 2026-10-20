@@ -49,26 +49,53 @@ class FeedbackItem {
   }
 }
 
+class FeedbackRateLimitedException implements Exception {
+  const FeedbackRateLimitedException();
+}
+
 class FeedbackService {
-  final CollectionReference<Map<String, dynamic>> _ref =
-      FirebaseFirestore.instance.collection('feedback');
+  /// firestore.rules'taki rateLimits süresiyle aynı olmalı.
+  static const Duration minInterval = Duration(minutes: 5);
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  CollectionReference<Map<String, dynamic>> get _ref =>
+      _firestore.collection('feedback');
 
   Future<void> send({
     required FeedbackCategory category,
     required String message,
-    String? email,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
-    final replyTo = (email ?? '').trim();
-    await _ref.add({
+    if (user == null) throw StateError('Giriş gerekli');
+
+    final limitRef = _firestore.collection('rateLimits').doc(user.uid);
+    final limit = await limitRef.get();
+    final last = (limit.data()?['feedbackAt'] as Timestamp?)?.toDate();
+    if (last != null && DateTime.now().difference(last) < minInterval) {
+      throw const FeedbackRateLimitedException();
+    }
+
+    final batch = _firestore.batch();
+    batch.set(limitRef, {'feedbackAt': FieldValue.serverTimestamp()});
+    batch.set(_ref.doc(), {
       'message': message.trim(),
       'category': category.id,
-      'email': replyTo.isNotEmpty ? replyTo : user?.email,
-      'uid': user?.uid,
+      'email': user.email,
+      'uid': user.uid,
       'platform': kIsWeb ? 'web' : defaultTargetPlatform.name,
       'status': 'new',
       'createdAt': FieldValue.serverTimestamp(),
     });
+    try {
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      // Saat farkı vb. durumlarda sınırı sunucu kuralı yakalar.
+      if (e.code == 'permission-denied' && last != null) {
+        throw const FeedbackRateLimitedException();
+      }
+      rethrow;
+    }
   }
 
   Future<List<FeedbackItem>> latest({int limit = 50}) async {

@@ -15,30 +15,107 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
-    // Profil: yalnızca e-posta, sağlayıcı, platform ve tarihler.
-    match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create, update: if isOwner(userId)
-        && request.resource.data.keys().hasOnly([
-          'email', 'provider', 'platform', 'createdAt', 'lastSeenAt',
-          'consentVersion', 'consentAt'
-        ]);
-      allow delete: if isOwner(userId);
+    // Engel e-postaya bağlı: hesap silinip aynı e-postayla açılsa da geçerli.
+    function isBlocked() {
+      return signedIn()
+        && 'email' in request.auth.token
+        && exists(/databases/$(database)/documents/blockedEmails/$(request.auth.token.email));
+    }
 
-      // Her kullanıcı sadece kendi ev kayıtlarına erişir
+    function isActiveOwner(userId) {
+      return isOwner(userId) && !isBlocked();
+    }
+
+    function userPath(userId) {
+      return /databases/$(database)/documents/users/$(userId);
+    }
+
+    function homePath(userId, homeId) {
+      return /databases/$(database)/documents/users/$(userId)/homes/$(homeId);
+    }
+
+    // Kullanıcı başına en fazla 100 ev (lib/services/database_service.dart).
+    function homeCountValid(userId) {
+      let before = resource.data.get('homeCount', null);
+      let after = request.resource.data.get('homeCount', null);
+      let homeId = request.resource.data.get('lastHomeId', '');
+      return after == before
+        // Eski hesaplarda sayacın ilk doldurulması
+        || (before == null && after is int && after >= 0 && after <= 100)
+        || (before is int && after == before + 1 && after <= 100
+            && homeId is string && homeId != ''
+            && !exists(homePath(userId, homeId))
+            && existsAfter(homePath(userId, homeId)))
+        || (before is int && after == before - 1 && after >= 0
+            && homeId is string && homeId != ''
+            && exists(homePath(userId, homeId))
+            && !existsAfter(homePath(userId, homeId)));
+    }
+
+    // Profil: yalnızca e-posta, sağlayıcı, platform, tarihler ve ev sayacı.
+    match /users/{userId} {
+      function profileKeysValid() {
+        return request.resource.data.keys().hasOnly([
+          'email', 'provider', 'platform', 'createdAt', 'lastSeenAt',
+          'consentVersion', 'consentAt', 'homeCount', 'lastHomeId'
+        ]);
+      }
+
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isActiveOwner(userId)
+        && profileKeysValid()
+        && (!('homeCount' in request.resource.data)
+            || (request.resource.data.homeCount is int
+                && request.resource.data.homeCount >= 0
+                && request.resource.data.homeCount <= 100));
+      allow update: if (isActiveOwner(userId)
+          && profileKeysValid()
+          && homeCountValid(userId))
+        || (isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['homeCount']));
+      allow delete: if isOwner(userId) || isAdmin();
+
       match /homes/{homeId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isActiveOwner(userId);
+        allow create: if isActiveOwner(userId)
+          && getAfter(userPath(userId)).data.homeCount
+             == get(userPath(userId)).data.homeCount + 1
+          && getAfter(userPath(userId)).data.lastHomeId == homeId;
+        allow update: if isActiveOwner(userId);
+        allow delete: if isOwner(userId) || isAdmin();
       }
     }
 
-    // Panelde toplam ev sayısı için (collection group sayımı).
+    // Panelde toplam ev sayısı ve kullanıcı evlerinin silinmesi için.
     match /{path=**}/homes/{homeId} {
       allow read: if isAdmin();
     }
 
-    // Misafirler de geri bildirim gönderebilir; okuma yalnızca admin.
+    match /blockedEmails/{email} {
+      allow get: if (signedIn() && request.auth.token.get('email', '') == email)
+        || isAdmin();
+      allow list, write: if isAdmin();
+    }
+
+    // Geri bildirim sıklık sınırı: kullanıcı başına 5 dakikada bir.
+    match /rateLimits/{userId} {
+      function stampValid() {
+        return request.resource.data.keys().hasOnly(['feedbackAt'])
+          && request.resource.data.feedbackAt == request.time;
+      }
+
+      allow read: if isOwner(userId);
+      allow create: if isActiveOwner(userId) && stampValid();
+      allow update: if isActiveOwner(userId)
+        && stampValid()
+        && request.time > resource.data.feedbackAt + duration.value(5, 'm');
+    }
+
+    // Yalnızca giriş yapmış ve engelli olmayan kullanıcılar gönderebilir.
     match /feedback/{feedbackId} {
-      allow create: if request.resource.data.keys().hasOnly([
+      allow create: if signedIn()
+        && !isBlocked()
+        && request.resource.data.keys().hasOnly([
           'message', 'category', 'email', 'uid', 'platform', 'status', 'createdAt'
         ])
         && request.resource.data.message is string
@@ -47,11 +124,10 @@ service cloud.firestore {
         && request.resource.data.category in ['oneri', 'hata', 'soru', 'diger']
         && request.resource.data.status == 'new'
         && request.resource.data.createdAt == request.time
-        && (request.resource.data.email == null
-            || (request.resource.data.email is string
-                && request.resource.data.email.size() <= 200))
-        && (request.resource.data.uid == null
-            || (signedIn() && request.resource.data.uid == request.auth.uid));
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.get('email', null)
+        && getAfter(/databases/$(database)/documents/rateLimits/$(request.auth.uid)).data.feedbackAt
+           == request.time;
       allow read, update, delete: if isAdmin();
     }
   }

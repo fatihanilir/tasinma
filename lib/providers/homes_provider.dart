@@ -201,7 +201,9 @@ class HomesProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = 'Kaydedilemedi, tekrar dene';
+      _errorMessage = e is HomeLimitException
+          ? 'En fazla $maxHomesPerUser ev kaydedebilirsin. Yer açmak için eski kayıtları sil.'
+          : 'Kaydedilemedi, tekrar dene';
       notifyListeners();
       return false;
     }

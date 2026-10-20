@@ -6,6 +6,7 @@ import '../providers/auth_provider.dart';
 import '../services/feedback_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_links.dart';
+import 'auth_screen.dart';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({super.key});
@@ -16,7 +17,6 @@ class SupportScreen extends StatefulWidget {
 
 class _SupportScreenState extends State<SupportScreen> {
   final _messageController = TextEditingController();
-  final _emailController = TextEditingController();
   final _feedbackService = FeedbackService();
   FeedbackCategory _category = FeedbackCategory.suggestion;
   bool _sending = false;
@@ -26,7 +26,6 @@ class _SupportScreenState extends State<SupportScreen> {
   @override
   void dispose() {
     _messageController.dispose();
-    _emailController.dispose();
     super.dispose();
   }
 
@@ -41,11 +40,7 @@ class _SupportScreenState extends State<SupportScreen> {
       _error = null;
     });
     try {
-      await _feedbackService.send(
-        category: _category,
-        message: message,
-        email: _emailController.text,
-      );
+      await _feedbackService.send(category: _category, message: message);
       FirebaseAnalytics.instance
           .logEvent(name: 'feedback_sent', parameters: {'category': _category.id})
           .catchError((_) {});
@@ -53,6 +48,13 @@ class _SupportScreenState extends State<SupportScreen> {
       setState(() {
         _sent = true;
         _sending = false;
+      });
+    } on FeedbackRateLimitedException {
+      if (!mounted) return;
+      setState(() {
+        _sending = false;
+        _error =
+            'Kısa süre önce mesaj gönderdiniz. Lütfen birkaç dakika sonra tekrar deneyin.';
       });
     } catch (_) {
       if (!mounted) return;
@@ -86,7 +88,9 @@ class _SupportScreenState extends State<SupportScreen> {
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              if (_sent)
+              if (signedInEmail == null)
+                const _SignInPrompt()
+              else if (_sent)
                 _SentCard(onAgain: () {
                   _messageController.clear();
                   setState(() => _sent = false);
@@ -126,23 +130,13 @@ class _SupportScreenState extends State<SupportScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                if (signedInEmail == null)
-                  TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'E-posta (isteğe bağlı, yanıt için)',
-                      border: OutlineInputBorder(),
-                    ),
-                  )
-                else
-                  Text(
-                    'Yanıtımız $signedInEmail adresine gönderilecek.',
-                    style: GoogleFonts.outfit(
-                      fontSize: 13,
-                      color: AppColors.muted,
-                    ),
+                Text(
+                  'Yanıtımız $signedInEmail adresine gönderilecek.',
+                  style: GoogleFonts.outfit(
+                    fontSize: 13,
+                    color: AppColors.muted,
                   ),
+                ),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
                   Text(
@@ -191,6 +185,49 @@ class _SupportScreenState extends State<SupportScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SignInPrompt extends StatelessWidget {
+  const _SignInPrompt();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Uygulama içinden geri bildirim göndermek için giriş yapmanız gerekiyor. '
+            'Giriş yapmadan aşağıdaki e-posta adresinden bize ulaşabilirsiniz.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              fontSize: 15,
+              color: AppColors.muted,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const AuthScreen(),
+                  fullscreenDialog: true,
+                ),
+              ),
+              child: const Text('Giriş yap'),
+            ),
+          ),
+        ],
       ),
     );
   }

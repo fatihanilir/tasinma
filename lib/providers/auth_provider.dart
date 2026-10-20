@@ -31,8 +31,10 @@ class AuthProvider extends ChangeNotifier {
   bool _profileReady = false;
   int _consentVersion = 0;
   bool _consentChecked = false;
+  bool _blocked = false;
 
   AuthStatus get status => _status;
+  bool get isBlocked => isAuthenticated && _blocked;
   User? get user => _user;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _user != null;
@@ -47,7 +49,10 @@ class AuthProvider extends ChangeNotifier {
   /// Giriş ekranındaki "okudum, onaylıyorum" kutusu.
   bool get consentChecked => _consentChecked;
   bool get needsConsent =>
-      isAuthenticated && _profileReady && _consentVersion < AppLinks.legalVersion;
+      isAuthenticated &&
+      _profileReady &&
+      !_blocked &&
+      _consentVersion < AppLinks.legalVersion;
   bool get isAppleSignInAvailable => _authService.isAppleSignInAvailable;
 
   /// Premium gelene kadar herkese açık; premium'da kapanacak.
@@ -81,6 +86,7 @@ class AuthProvider extends ChangeNotifier {
       } else {
         _profileReady = false;
         _consentVersion = 0;
+        _blocked = false;
         if (_status != AuthStatus.loading) {
           _status = AuthStatus.unauthenticated;
         }
@@ -92,11 +98,13 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _syncProfile(User user, {bool accept = false}) async {
     try {
-      _consentVersion = await _userService.syncProfile(
+      final state = await _userService.syncProfile(
         user,
         acceptConsentVersion:
             (accept || _consentChecked) ? AppLinks.legalVersion : null,
       );
+      _consentVersion = state.consentVersion;
+      _blocked = state.blocked;
     } catch (e) {
       // Profil yazılamazsa (ağ vb.) kullanıcıyı kilitlemeyelim.
       debugPrint('Profile sync error: $e');
