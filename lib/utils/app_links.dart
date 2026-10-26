@@ -17,7 +17,8 @@ class AppLinks {
 
   /// Firebase App Check (web) için reCAPTCHA Enterprise site anahtarı.
   /// Boşken App Check devre dışı kalır.
-  static const String recaptchaSiteKey = '';
+  static const String recaptchaSiteKey =
+      '6Lc5mQAuAAAAAH5bsmT9Lz3BMJroTbg2SfoQp_cM';
 
   /// Metinler değişince artırılır; kullanıcılardan yeniden onay istenir.
   static const int legalVersion = 1;
