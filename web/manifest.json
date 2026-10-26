@@ -1,11 +1,13 @@
 {
-    "name": "ev_hesap_app",
-    "short_name": "ev_hesap_app",
+    "name": "Cebinden Eve",
+    "short_name": "Cebinden Eve",
     "start_url": ".",
+    "scope": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F4EFE6",
+    "theme_color": "#1C3D32",
+    "description": "İlandaki fiyatı değil, evin gerçek maliyetini hesaplayın.",
+    "lang": "tr",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

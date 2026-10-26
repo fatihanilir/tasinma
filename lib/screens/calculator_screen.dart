@@ -77,12 +77,13 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final sticky = auth.showStickyCalculatorAd;
-    final fixed = auth.showFixedCalculatorAd;
 
     return Consumer<HomesProvider>(
       builder: (context, provider, _) {
         final home = provider.tempHome;
+        // AdSense: içeriksiz (boş form) ekranda reklam gösterilmez.
+        final sticky = auth.showStickyCalculatorAd && home.hasValidInput;
+        final fixed = auth.showFixedCalculatorAd && home.hasValidInput;
         final warningMessage = _getWarningMessage(home.price, home.loanAmount);
 
         return Column(

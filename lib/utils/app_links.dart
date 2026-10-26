@@ -5,6 +5,7 @@ class AppLinks {
   static const String adminEmail = 'ffatihanilir@gmail.com';
 
   static const String site = 'https://cebindeneve.com';
+  static const String guides = '$site/rehber';
   static const String privacy = '$site/gizlilik';
   static const String terms = '$site/kosullar';
   static const String support = '$site/destek';

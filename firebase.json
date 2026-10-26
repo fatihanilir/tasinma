@@ -3,7 +3,7 @@
     "rules": "firestore.rules"
   },
   "hosting": {
-    "public": "build/web",
+    "public": "public",
     "cleanUrls": true,
     "ignore": [
       "firebase.json",
@@ -12,8 +12,8 @@
     ],
     "rewrites": [
       {
-        "source": "**",
-        "destination": "/index.html"
+        "source": "/hesapla/**",
+        "destination": "/hesapla/index.html"
       }
     ],
     "headers": [
@@ -27,7 +27,7 @@
         ]
       },
       {
-        "source": "**/*.@(html|js|json)",
+        "source": "**/*.@(html|js|json|css|xml)",
         "headers": [
           {
             "key": "Cache-Control",

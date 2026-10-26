@@ -44,3 +44,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .firebase/
+
+# Firebase Hosting çıktısı (tools/build_all.sh üretir)
+/public/

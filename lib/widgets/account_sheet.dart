@@ -107,6 +107,11 @@ class _AccountSheet extends StatelessWidget {
                 onTap: () => _push(context, const AdminScreen()),
               ),
             _Item(
+              icon: Icons.menu_book_outlined,
+              label: 'Ev alım rehberleri',
+              onTap: () => AppLinks.open(AppLinks.guides),
+            ),
+            _Item(
               icon: Icons.support_agent_rounded,
               label: 'Destek ve geri bildirim',
               onTap: () => _push(context, const SupportScreen()),

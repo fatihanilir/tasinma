@@ -152,7 +152,6 @@ class _SavedHomesScreenState extends State<SavedHomesScreen> {
         }
 
         if (homes.isEmpty) {
-          final showAds = context.watch<AuthProvider>().showAds;
           return LayoutBuilder(
             builder: (context, constraints) => SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -163,13 +162,6 @@ class _SavedHomesScreenState extends State<SavedHomesScreen> {
                   child: Column(
                     children: [
                       _EmptyState(onAddNew: widget.onAddNew),
-                      if (showAds) ...[
-                        const SizedBox(height: 14),
-                        const AdBannerPlaceholder(
-                          label: 'Kayıtlı evler · boş liste',
-                          unit: AdUnit.multiplex,
-                        ),
-                      ],
                     ],
                   ),
                 ),
