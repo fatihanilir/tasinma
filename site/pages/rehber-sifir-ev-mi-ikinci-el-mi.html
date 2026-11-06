@@ -1,0 +1,126 @@
+<!--
+title: Sıfır Ev mi, İkinci El mi? KDV, Tapu Harcı, Kredi ve Gizli Maliyetler
+description: Müteahhitten sıfır konut almakla ikinci el ev almanın maliyet farkları; KDV oranları, tapu harcı, kat irtifakı riski, teslim gecikmesi, kredi oranları ve tadilat gibi kalemler örnek hesapla karşılaştırılıyor.
+path: rehber/sifir-ev-mi-ikinci-el-mi
+type: article
+category: surec
+date: 2026-11-06
+order: 16
+-->
+<p>Aynı bütçeyle yeni bir projeden mi, yoksa oturulmuş bir binadan mı ev almalı? Cevap yalnızca zevk meselesi değil;
+iki seçeneğin maliyet yapısı birbirinden ciddi biçimde farklı. Sıfır konutta KDV ve teslim riski, ikinci elde
+tadilat ve bina yaşı öne çıkar. Bu rehberde iki seçeneği kalem kalem karşılaştırıyoruz.</p>
+
+<h2>Özet tablo</h2>
+<div class="table-scroll">
+<table class="data">
+  <tr><th>Kalem</th><th>Sıfır (müteahhitten)</th><th>İkinci el (şahıstan)</th></tr>
+  <tr><td>KDV</td><td>Var: net 150 m²'ye kadar %10 (dönüşümde %1), aşan kısım %20</td><td>Yok</td></tr>
+  <tr><td>Tapu harcı</td><td>%4 (KDV hariç bedel üzerinden)</td><td>%4</td></tr>
+  <tr><td>Emlakçı komisyonu</td><td>Genellikle yok (proje satış ofisi)</td><td>%2 + KDV (sahibinden alınmazsa)</td></tr>
+  <tr><td>Tapu türü</td><td>Çoğunlukla kat irtifakı; iskan sonrası kat mülkiyeti</td><td>Genellikle kat mülkiyeti</td></tr>
+  <tr><td>Teslim</td><td>Projeden alımda 1–3 yıl bekleme riski</td><td>Hemen</td></tr>
+  <tr><td>Tadilat</td><td>Düşük; sadece eşya ve küçük düzenlemeler</td><td>Boya, mutfak, banyo, tesisat olabilir</td></tr>
+  <tr><td>Deprem yönetmeliği</td><td>2018 yönetmeliğine uygun</td><td>Bina yaşına bağlı; 2000 öncesi riskli olabilir</td></tr>
+  <tr><td>Enerji sınıfı</td><td>Genellikle B–C; kredi oranı avantajı</td><td>Eski binalarda belge yok → düşük kredi oranı</td></tr>
+  <tr><td>Aidat</td><td>Yeni sitelerde yüksek olabilir</td><td>Genellikle daha düşük</td></tr>
+  <tr><td>Pazarlık payı</td><td>Sınırlı; ödeme planı esnekliği</td><td>Daha yüksek</td></tr>
+</table>
+</div>
+
+<h2>KDV: sıfır konutun en büyük ek maliyeti</h2>
+<p>İkinci el konutu bir şahıstan alırken KDV ödenmez. Müteahhitten alınan sıfır konutta ise satış bedeline KDV
+eklenir ve oran, net alana ve projeye göre değişir. Yapı ruhsatı 1 Nisan 2022'den sonra alınan projelerde:</p>
+<ul>
+  <li>Net alanın 150 m²'ye kadar olan kısmına isabet eden bedel: <strong>%10</strong>,</li>
+  <li>150 m²'yi aşan kısma isabet eden bedel: <strong>%20</strong>,</li>
+  <li>6306 sayılı Kanun kapsamındaki kentsel dönüşüm projelerinde 150 m²'ye kadar olan kısım: <strong>%1</strong>.</li>
+</ul>
+<p>Ruhsatı 2022 öncesi alınmış projelerde eski kurallar geçerlidir ve oran büyükşehirlerde arsanın vergi değerine
+göre %1, %10 veya %20 olabilir. Satıcıdan ruhsat tarihini ve uygulanacak oranı yazılı olarak isteyin. Önemli
+nokta: KDV hesabında ilanlardaki brüt alan değil, <strong>net alan</strong> esas alınır.</p>
+
+<h2>KDV hesaplama aracı</h2>
+<!-- calc:kdv -->
+
+<!-- ad -->
+
+<h2>Örnek: 6.000.000 TL bütçeyle iki seçenek</h2>
+<div class="table-scroll">
+<table class="data">
+  <tr><th>Kalem</th><th class="num">Sıfır, 120 m² net, KDV hariç 5.450.000 TL</th><th class="num">İkinci el, emlakçıdan, 5.000.000 TL</th></tr>
+  <tr><td>Satış bedeli</td><td class="num">5.450.000 TL</td><td class="num">5.000.000 TL</td></tr>
+  <tr><td>KDV</td><td class="num">545.000 TL (%10)</td><td class="num">0 TL</td></tr>
+  <tr><td>Tapu harcı (%4)</td><td class="num">218.000 TL</td><td class="num">200.000 TL</td></tr>
+  <tr><td>Emlakçı komisyonu</td><td class="num">0 TL</td><td class="num">120.000 TL</td></tr>
+  <tr><td>Döner sermaye (2 işlem)</td><td class="num">11.135 TL</td><td class="num">11.135 TL</td></tr>
+  <tr><td>Tadilat</td><td class="num">50.000 TL</td><td class="num">350.000 TL</td></tr>
+  <tr class="total"><td>Toplam</td><td class="num">6.274.135 TL</td><td class="num">5.681.135 TL</td></tr>
+</table>
+</div>
+<p>Aynı büyüklükteki iki ev arasında yaklaşık 600 bin TL fark oluşuyor; farkın büyük kısmı KDV'den geliyor.
+Buna karşılık sıfır ev daha yeni yönetmelikle yapılmış, enerji sınıfı daha yüksek olduğu için kredi oranı avantajı
+sunabilir. Kendi rakamlarınızı Cebinden Eve hesaplayıcısında iki ayrı kayıt olarak girip karşılaştırabilirsiniz.</p>
+
+<h2>Sıfır konutta dikkat edilecekler</h2>
+<ul>
+  <li><strong>Kat irtifakı mı, kat mülkiyeti mi?</strong> Yeni projeler çoğunlukla kat irtifaklı satılır; iskan
+  alınınca kat mülkiyetine geçilir. İskanın ne zaman alınacağını sözleşmeye yazdırın. Ayrıntılar için
+  <a href="/rehber/kat-irtifaki-kat-mulkiyeti-iskan">kat irtifakı ve iskan rehberine</a> bakın.</li>
+  <li><strong>Maketten satış riski:</strong> Teslim gecikmesi, proje değişikliği ve müteahhidin iflası
+  riskine karşı noter onaylı satış vaadi sözleşmesi ve tapuya şerh isteyin. Ön ödemeli konut satışlarında
+  müteahhidin bina tamamlama sigortası ya da banka teminatı sunması gerekir.</li>
+  <li><strong>Ödeme planı:</strong> Müteahhitler peşinat + ara ödeme + teslimde kredi şeklinde planlar sunar.
+  Kredi, iskan ya da en azından kat irtifakı tapusu olmadan kullanılamaz.</li>
+  <li><strong>Teslim şartnamesi:</strong> Mutfak dolabı, kombi, parke gibi kalemlerin marka/model bilgisi sözleşmede
+  olmalı.</li>
+  <li><strong>Aidat tahmini:</strong> Havuz, güvenlik ve peyzajlı sitelerde aidat aylık taksite yakın bir yük
+  olabilir.</li>
+</ul>
+
+<h2>İkinci elde dikkat edilecekler</h2>
+<ul>
+  <li><strong>Bina yaşı ve deprem güvenliği:</strong> 2000 öncesi binalarda mühendis incelemesi yaptırın.</li>
+  <li><strong>Tadilat bütçesi:</strong> Boya, mutfak, banyo ve tesisat yenileme ev fiyatının %5–10'una
+  ulaşabilir. Teklif almadan karar vermeyin.</li>
+  <li><strong>Borçlar:</strong> Aidat, emlak vergisi ve fatura borçlarını kontrol edin.</li>
+  <li><strong>Enerji kimlik belgesi:</strong> Yoksa kredi/değer oranı "diğer" sütunundan uygulanır; peşinat
+  ihtiyacı artar.</li>
+  <li><strong>Tapu ve iskan:</strong> İskanı olmayan eski binalar hâlâ vardır; fiyatın bunu yansıtması gerekir.</li>
+</ul>
+
+<h2>Hangisi size uygun?</h2>
+<ul>
+  <li><strong>Hemen taşınmanız gerekiyorsa</strong> ve tadilata vakit ayırabiliyorsanız ikinci el.</li>
+  <li><strong>Peşinatınız sınırlıysa</strong> enerji sınıfı yüksek sıfır konutun kredi avantajı belirleyici olabilir.</li>
+  <li><strong>Riskten kaçınıyorsanız</strong> tamamlanmış, iskanlı sıfır ya da yeni sayılabilecek (5–10 yaş) ikinci
+  el ev iki dünyanın avantajını birleştirir.</li>
+</ul>
+
+<h2>Sık sorulan sorular</h2>
+<details>
+  <summary>Sıfır konutta KDV yüzde kaç?</summary>
+  <p>Ruhsatı 1 Nisan 2022 sonrası projelerde net alanın 150 m²'ye kadar kısmı %10, aşan kısmı %20; kentsel dönüşüm
+  projelerinde 150 m²'ye kadar %1. Eski ruhsatlı projelerde oran %1–%20 arasında değişebilir.</p>
+</details>
+<details>
+  <summary>Tapu harcı KDV dahil bedel üzerinden mi hesaplanır?</summary>
+  <p>Hayır. Tapu harcının matrahı KDV hariç satış bedelidir; KDV ayrı bir vergidir ve harca dahil edilmez.</p>
+</details>
+<details>
+  <summary>Kat irtifaklı sıfır daireye konut kredisi verilir mi?</summary>
+  <p>Evet, bankalar kat irtifaklı tapuya kredi verebilir; ancak binanın büyük ölçüde tamamlanmış olmasını ve
+  ekspertiz raporunu ister. İskansız bina için bazı bankalar daha düşük oran uygular.</p>
+</details>
+<details>
+  <summary>İkinci el evde satıcı KDV isteyebilir mi?</summary>
+  <p>Şahıslar arası satışta KDV doğmaz. Satıcı bir şirketse ya da ticari olarak alım satım yapıyorsa KDV söz konusu
+  olabilir; faturayı ve satıcının kimliğini kontrol edin.</p>
+</details>
+
+<h2>Kaynaklar</h2>
+<ul class="sources">
+  <li><a href="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=3065&MevzuatTur=1&MevzuatTertip=5" rel="nofollow noopener" target="_blank">3065 sayılı Katma Değer Vergisi Kanunu</a> ve KDV oranlarına ilişkin Cumhurbaşkanı Kararları (5359, 7346)</li>
+  <li><a href="https://www.gib.gov.tr/" rel="nofollow noopener" target="_blank">GİB – KDV Genel Uygulama Tebliği, konut teslimleri</a></li>
+  <li><a href="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=20080&MevzuatTur=7&MevzuatTertip=5" rel="nofollow noopener" target="_blank">Ön Ödemeli Konut Satışları Hakkında Yönetmelik</a></li>
+</ul>

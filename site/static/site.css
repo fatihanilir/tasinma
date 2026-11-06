@@ -114,6 +114,34 @@ table:not(.data) th, table:not(.data) td { text-align: left; vertical-align: top
 .related h2 { font-size: 21px; }
 .ad-slot { margin: 28px 0; min-height: 0; }
 
+/* Hesaplama araçları */
+.calc { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px 22px 18px; margin: 28px 0; box-shadow: 0 10px 30px rgba(28, 61, 50, 0.06); }
+.calc h3 { margin: 0 0 4px; }
+.calc-intro { margin: 0 0 16px; color: var(--muted); font-size: 15px; }
+.calc-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 16px; }
+.calc-form label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
+.calc-form input, .calc-form select { font: inherit; font-size: 16px; color: var(--ink); padding: 10px 12px; border: 1px solid rgba(28, 61, 50, 0.25); border-radius: 10px; background: #fff; width: 100%; }
+.calc-form input:focus, .calc-form select:focus { outline: 2px solid var(--forest2); outline-offset: 1px; }
+.calc-results { margin-top: 18px; border-top: 1px dashed var(--line); padding-top: 10px; }
+.calc-row { display: flex; justify-content: space-between; gap: 16px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 16px; }
+.calc-row:last-child { border-bottom: none; }
+.calc-row output { font-weight: 600; color: var(--forest); font-variant-numeric: tabular-nums; text-align: right; }
+.calc-note { font-size: 13px; color: var(--muted); margin: 12px 0 0; }
+main.home .calc { margin-top: 12px; }
+
+.glossary dt { font-weight: 600; color: var(--forest); margin-top: 14px; }
+.glossary dd { margin: 2px 0 0; color: var(--ink); }
+.sources { font-size: 15px; color: var(--muted); }
+.sources a { color: var(--forest2); }
+
+.author-box { display: flex; gap: 16px; align-items: flex-start; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin: 20px 0; }
+.author-box img { border-radius: 12px; flex: none; }
+.author-box p { margin: 4px 0 0; font-size: 15px; }
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+.figure { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+.figure strong { display: block; font-family: "Fraunces", Georgia, serif; font-size: 22px; color: var(--forest); }
+.figure span { font-size: 14px; color: var(--muted); }
+
 details { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin: 10px 0; }
 details summary { cursor: pointer; font-weight: 600; color: var(--forest); }
 details p { margin: 10px 0 0; }

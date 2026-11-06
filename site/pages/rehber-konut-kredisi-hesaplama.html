@@ -3,7 +3,9 @@ title: Konut Kredisi Taksiti Nasıl Hesaplanır? Formül, Örnekler ve Vade Seç
 description: Konut kredisi aylık taksit formülü, faiz ve vadenin toplam geri ödemeye etkisi, ilk taksitlerin neden çoğunlukla faizden oluştuğu, erken kapama ve kredi masrafları örneklerle.
 path: rehber/konut-kredisi-hesaplama
 type: article
+category: kredi
 date: 2026-10-26
+updated: 2026-11-06
 order: 4
 -->
 <p>Konut kredisi çekerken çoğu kişi yalnızca aylık taksite bakar. Oysa aynı taksit tutarının arkasında vade, faiz
@@ -18,6 +20,9 @@ hesaplanır:</p>
 K: kredi tutarı · r: aylık faiz oranı (ör. %3,05 için 0,0305) · n: vade (ay)</div>
 <p>Konut kredilerinde KKDF ve BSMV alınmadığı için bankanın ilan ettiği aylık faiz oranını doğrudan formüle
 koyabilirsiniz. Cebinden Eve hesaplayıcısı da taksitleri bu formülle hesaplar.</p>
+
+<h2>Taksit hesaplama aracı</h2>
+<!-- calc:kredi -->
 
 <h2>Örnek taksit tablosu</h2>
 <p>Aşağıdaki tablo, farklı kredi tutarları için iki faiz oranında 60 ve 120 aylık vadelerin aylık taksitlerini ve
@@ -58,9 +63,10 @@ vadede ciddi tasarruf sağlar.</p>
 <ul>
   <li><strong>Ekspertiz değeri:</strong> Bankalar krediyi satış bedeline değil, değerleme raporundaki değere göre
   hesaplar. Rapor düşük çıkarsa kredi tutarı da düşer.</li>
-  <li><strong>Kredi/değer oranı sınırları:</strong> BDDK düzenlemeleri, evin değerine ve enerji sınıfına göre
-  kullandırılabilecek azami kredi oranını sınırlar. Bu oranlar zaman zaman değiştiği için güncel sınırı bankanızdan
-  öğrenin.</li>
+  <li><strong>Kredi/değer oranı sınırları:</strong> BDDK'nın 29 Ocak 2026 tarihli kararına göre ekspertiz değeri
+  5 milyon TL'ye kadar olan A–B enerji sınıfı konutlarda azami kredi değerin %90'ıdır; değer yükseldikçe ve enerji
+  sınıfı düştükçe oran %20'ye kadar iner. Ayrıntılı tablo için
+  <a href="/rehber/konut-kredisi-ne-kadar-cekebilirim">ne kadar konut kredisi çekebilirim</a> rehberine bakın.</li>
   <li><strong>Gelir ve borç durumu:</strong> Bankalar aylık taksitin gelirinize oranına ve mevcut borçlarınıza bakar.
   Taksitin hane gelirinin üçte birini aşmaması hem bankalar hem de bütçeniz için sağlıklı bir ölçüdür.</li>
   <li><strong>Kredi notu:</strong> Geçmiş ödeme performansınız hem onayı hem de size sunulan faizi etkiler.</li>
@@ -98,3 +104,33 @@ gelecekteki faiz yükü en yüksek bu dönemdedir.</p>
 <p>Konut kredisi taksiti; kredi tutarı, aylık faiz ve vadeye bağlı standart bir formülle hesaplanır. Vadeyi uzatmak
 taksiti sınırlı ölçüde düşürürken toplam maliyeti ciddi şekilde artırır. Teklifleri toplam geri ödemeye göre
 karşılaştırın ve kredi ihtiyacınızı ev fiyatından değil, tüm masraflar dahil toplam maliyetten hesaplayın.</p>
+
+<h2>Sık sorulan sorular</h2>
+<details>
+  <summary>Aylık %2,79 faiz yıllık yüzde kaça denk gelir?</summary>
+  <p>Basit çarpımla 12 × 2,79 = %33,48; bileşik hesapla (1,0279<sup>12</sup> − 1) ≈ %39,1'dir. Bankaların ilan
+  ettiği "yıllık maliyet oranı" bileşik hesabı ve masrafları içerdiği için daha yüksek görünür.</p>
+</details>
+<details>
+  <summary>Konut kredisinde en uzun vade kaç ay?</summary>
+  <p>Konut kredileri BDDK'nın tüketici kredilerine getirdiği vade sınırlarının dışındadır. Bankalar genellikle 120
+  aya kadar, bazıları 180 veya 240 aya kadar vade sunar; ancak yüksek faiz ortamında 120 ayın üzerindeki vadeler
+  taksiti neredeyse hiç düşürmez.</p>
+</details>
+<details>
+  <summary>Taksit gelirimin ne kadarı olmalı?</summary>
+  <p>Bankalar genellikle toplam kredi taksitlerinin aylık net gelirin %50'sini aşmamasını ister. Bütçe güvenliği
+  için %35–40'ı aşmamak daha sağlıklıdır.</p>
+</details>
+<details>
+  <summary>Değişken faizli konut kredisi var mı?</summary>
+  <p>Mevzuat değişken faizli konut kredisine izin verir ve bu kredilerde erken ödeme tazminatı alınmaz; ancak
+  Türkiye'de kullandırılan konut kredilerinin büyük çoğunluğu sabit faizlidir.</p>
+</details>
+
+<h2>Kaynaklar</h2>
+<ul class="sources">
+  <li><a href="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6502&MevzuatTur=1&MevzuatTertip=5" rel="nofollow noopener" target="_blank">6502 sayılı Tüketicinin Korunması Hakkında Kanun</a>, m. 32–39 (konut finansmanı)</li>
+  <li><a href="https://www.bddk.org.tr/Mevzuat/DokumanGetir/1327" rel="nofollow noopener" target="_blank">BDDK Kurul Kararı 11364 (29.01.2026)</a> – kredi/değer oranları</li>
+  <li><a href="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=34484&MevzuatTur=9&MevzuatTertip=5" rel="nofollow noopener" target="_blank">TCMB Tebliği 2020/7</a> – tahsis ücreti sınırı</li>
+</ul>
