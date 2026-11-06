@@ -14,11 +14,20 @@
   function tl2(v) { return isFinite(v) ? TL2.format(v) + ' TL' : '–'; }
   function pct(v) { return isFinite(v) ? '%' + PCT.format(v) : '–'; }
 
-  function val(root, id) {
-    var el = root.querySelector('#' + id);
+  function parseNum(el) {
     if (!el) return 0;
-    var v = parseFloat(String(el.value).replace(',', '.'));
+    var s = String(el.value).replace(/\s/g, '');
+    if (!s) return 0;
+    if (el.getAttribute('data-fmt') === 'money') {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(',', '.');
+    }
+    var v = parseFloat(s);
     return isFinite(v) ? v : 0;
+  }
+  function val(root, id) {
+    return parseNum(root.querySelector('#' + id));
   }
   function set(root, id, text) {
     var el = root.querySelector('#' + id);
@@ -173,6 +182,12 @@
     root.querySelectorAll('input, select').forEach(function (el) {
       el.addEventListener('input', run);
       el.addEventListener('change', run);
+    });
+    root.querySelectorAll('input[data-fmt="money"]').forEach(function (el) {
+      el.addEventListener('blur', function () {
+        var n = parseNum(el);
+        el.value = n ? TL.format(Math.round(n)) : '';
+      });
     });
     root.querySelector('form').addEventListener('submit', function (e) { e.preventDefault(); run(); });
     run();

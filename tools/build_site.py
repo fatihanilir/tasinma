@@ -110,14 +110,18 @@ HOST_REDIRECT = """<script>(function(){var h=location.hostname;if(h.indexOf('web
 # Hesaplama araçları (sunucu tarafında form, mantık calc.js'te)
 # ---------------------------------------------------------------------------
 
-def _field(id_: str, label: str, inp: str) -> str:
-    return f'<label for="{id_}"><span>{label}</span>{inp}</label>'
+def _field(id_: str, label: str, inp: str, wide: bool = False) -> str:
+    cls = ' class="wide"' if wide else ""
+    return f'<label for="{id_}"{cls}><span>{label}</span>{inp}</label>'
 
 
-def _num(id_: str, value, step="1", min_="0", suffix=""):
-    s = f' data-suffix="{suffix}"' if suffix else ""
+def _num(id_: str, value, step="1", min_="0", money: bool = False):
+    if money:
+        shown = f"{int(round(float(value))):,}".replace(",", ".")
+        return (f'<input type="text" inputmode="decimal" id="{id_}" name="{id_}" '
+                f'value="{shown}" data-fmt="money" autocomplete="off">')
     return (f'<input type="number" id="{id_}" name="{id_}" value="{value}" '
-            f'step="{step}" min="{min_}" inputmode="decimal"{s}>')
+            f'step="{step}" min="{min_}" inputmode="decimal">')
 
 
 def _select(id_: str, options: list) -> str:
@@ -129,11 +133,11 @@ def _select(id_: str, options: list) -> str:
 
 
 KATSAYI_OPTS = [
-    ("2.5", "2,50 – büyükşehir merkez ilçeleri (İstanbul, Ankara, İzmir vb.)"),
-    ("2", "2,00 – il merkezleri ve büyük ilçeler"),
-    ("1.5", "1,50 – orta ölçekli ilçeler"),
-    ("1", "1,00 – küçük ilçeler"),
-    ("0.5", "0,50 – en düşük katsayılı ilçeler"),
+    ("2.5", "2,50 büyükşehir"),
+    ("2", "2,00 il merkezi"),
+    ("1.5", "1,50 ilçe"),
+    ("1", "1,00 küçük ilçe"),
+    ("0.5", "0,50 en düşük"),
 ]
 
 CALCS = {
@@ -141,13 +145,13 @@ CALCS = {
         "title": "Ev alım maliyeti hesaplayıcı",
         "intro": "İlan fiyatını ve birikiminizi girin; tapu harcı, komisyon, döner sermaye ve kredi taksitiyle gerçek maliyeti görün.",
         "fields": [
-            _field("t-fiyat", "Ev fiyatı (TL)", _num("t-fiyat", 5000000, step="10000")),
-            _field("t-nakit", "Elinizdeki nakit (TL)", _num("t-nakit", 2500000, step="10000")),
-            _field("t-harc", "Tapu harcı", _select("t-harc", [("0.04", "%4 – tamamını alıcı öder"), ("0.02", "%2 – yalnızca alıcı payı")])),
-            _field("t-komisyon", "Emlakçı komisyonu", _select("t-komisyon", [("0.024", "%2 + KDV (emlakçıdan)"), ("0", "Yok (sahibinden)")])),
-            _field("t-katsayi", "Tapu yöresel katsayısı", _select("t-katsayi", KATSAYI_OPTS)),
-            _field("t-ek", "Diğer masraflar (ekspertiz, sigorta, taşınma…) (TL)", _num("t-ek", 25000, step="1000")),
-            _field("t-faiz", "Aylık kredi faizi (%)", _num("t-faiz", 2.79, step="0.01")),
+            _field("t-fiyat", "Ev fiyatı", _num("t-fiyat", 5000000, money=True)),
+            _field("t-nakit", "Nakit", _num("t-nakit", 2500000, money=True)),
+            _field("t-harc", "Tapu harcı", _select("t-harc", [("0.04", "%4 alıcı öder"), ("0.02", "%2 alıcı payı")])),
+            _field("t-komisyon", "Komisyon", _select("t-komisyon", [("0.024", "%2 + KDV"), ("0", "Yok")])),
+            _field("t-katsayi", "Yöresel katsayı", _select("t-katsayi", KATSAYI_OPTS), wide=True),
+            _field("t-ek", "Diğer masraflar", _num("t-ek", 25000, money=True), wide=True),
+            _field("t-faiz", "Aylık faiz (%)", _num("t-faiz", 2.79, step="0.01")),
             _field("t-vade", "Vade (ay)", _num("t-vade", 120, step="1", min_="1")),
         ],
         "results": [
@@ -157,13 +161,14 @@ CALCS = {
             ("t-r-geri", "Toplam geri ödeme"),
         ],
         "note": "Döner sermaye 2026 TKGM tarifesine göre (2.227 TL × katsayı) hesaplanır; kredi gerekiyorsa ipotek için ikinci kez eklenir. Taksit, eşit taksitli kredi formülüyle bulunur.",
+        "primary": ("t-r-toplam", "t-r-taksit"),
     },
     "tapu": {
         "title": "Tapu harcı hesaplama",
         "intro": "Satış bedelini girin; alıcı ve satıcı paylarını ve toplam harcı görün.",
         "fields": [
-            _field("h-bedel", "Tapuda beyan edilen satış bedeli (TL)", _num("h-bedel", 5000000, step="10000")),
-            _field("h-katsayi", "Tapu yöresel katsayısı (döner sermaye için)", _select("h-katsayi", KATSAYI_OPTS)),
+            _field("h-bedel", "Satış bedeli", _num("h-bedel", 5000000, money=True)),
+            _field("h-katsayi", "Yöresel katsayı", _select("h-katsayi", KATSAYI_OPTS)),
         ],
         "results": [
             ("h-r-alici", "Alıcı payı (%2)"), ("h-r-satici", "Satıcı payı (%2)"),
@@ -171,24 +176,26 @@ CALCS = {
             ("h-r-alici-toplam", "Tamamını alıcı öderse tapuda ödenecek"),
         ],
         "note": "Oranlar 492 sayılı Harçlar Kanunu (4) sayılı tarifeye göre binde 20 + binde 20'dir. Döner sermaye 2026 göstergesi 2.227 TL'dir.",
+        "primary": ("h-r-toplam",),
     },
     "komisyon": {
         "title": "Emlakçı komisyonu hesaplama",
         "intro": "Satış bedeli ve anlaştığınız oranı girin; KDV dahil komisyonu görün.",
         "fields": [
-            _field("k-bedel", "Satış bedeli (TL)", _num("k-bedel", 5000000, step="10000")),
+            _field("k-bedel", "Satış bedeli", _num("k-bedel", 5000000, money=True)),
             _field("k-oran", "Hizmet bedeli oranı (%) – yasal üst sınır 2", _num("k-oran", 2, step="0.1")),
         ],
         "results": [
             ("k-r-net", "Hizmet bedeli"), ("k-r-kdv", "KDV (%20)"), ("k-r-toplam", "Ödenecek toplam"),
         ],
         "note": "Taşınmaz Ticareti Hakkında Yönetmelik'e göre alıcı ve satıcıdan ayrı ayrı en fazla %2 alınabilir; KDV ayrıca eklenir.",
+        "primary": ("k-r-toplam",),
     },
     "kredi": {
         "title": "Konut kredisi taksit hesaplama",
         "intro": "Kredi tutarı, aylık faiz ve vadeyi girin; taksit, toplam geri ödeme ve toplam faizi görün.",
         "fields": [
-            _field("c-tutar", "Kredi tutarı (TL)", _num("c-tutar", 2500000, step="10000")),
+            _field("c-tutar", "Kredi tutarı", _num("c-tutar", 2500000, money=True)),
             _field("c-faiz", "Aylık faiz oranı (%)", _num("c-faiz", 2.79, step="0.01")),
             _field("c-vade", "Vade (ay)", _num("c-vade", 120, step="1", min_="1")),
         ],
@@ -198,6 +205,7 @@ CALCS = {
             ("c-r-yillik", "Yıllık maliyet (bileşik)"),
         ],
         "note": "Konut kredilerinde KKDF ve BSMV alınmaz; hesap bankaların eşit taksitli ödeme planıyla aynı formülü kullanır. Tahsis ücreti ve sigortalar dahil değildir.",
+        "primary": ("c-r-taksit",),
     },
     "doner": {
         "title": "Tapu döner sermaye ücreti hesaplama",
@@ -210,18 +218,20 @@ CALCS = {
             ("d-r-islem", "Bir işlem ücreti"), ("d-r-toplam", "Toplam döner sermaye"),
         ],
         "note": "2026 tarifesi: işlem ücreti = 2.227 TL × yöresel katsayı (KDV dahil). Satış ve ipotek tek talepte yapıldığında iki işlem ücreti alınır. Kesin katsayı için TKGM listesine bakın.",
+        "primary": ("d-r-toplam",),
     },
     "erken": {
         "title": "Erken kapama tazminatı hesaplama",
         "intro": "Erken ödeyeceğiniz anaparayı ve kalan vadeyi girin; bankanın isteyebileceği en yüksek tazminatı görün.",
         "fields": [
-            _field("e-anapara", "Erken ödenecek anapara (TL)", _num("e-anapara", 1000000, step="10000")),
+            _field("e-anapara", "Erken ödenecek anapara", _num("e-anapara", 1000000, money=True)),
             _field("e-vade", "Kalan vade (ay)", _num("e-vade", 60, step="1", min_="1")),
         ],
         "results": [
             ("e-r-oran", "Uygulanacak üst sınır"), ("e-r-tutar", "Azami tazminat"),
         ],
         "note": "6502 sayılı Kanun m.37: sabit faizli kredide kalan vade 36 ayı aşmıyorsa %1, aşıyorsa %2 üst sınır; tutar faiz indirimini aşamaz. Değişken faizli kredide tazminat alınmaz.",
+        "primary": ("e-r-tutar",),
     },
     "dask": {
         "title": "DASK sigorta bedeli hesaplama",
@@ -234,12 +244,13 @@ CALCS = {
             ("s-r-bedel", "Sigorta bedeli (teminat)"), ("s-r-not", "Azami teminat uygulandı mı?"),
         ],
         "note": "Kasım 2026 DASK tarifesi: betonarme 12.288 TL/m², diğer 8.192 TL/m², azami teminat 2.605.100 TL. Prim; risk bölgesi, bina yaşı ve kat sayısına göre ayrıca hesaplanır.",
+        "primary": ("s-r-bedel",),
     },
     "kdv": {
         "title": "Sıfır konut KDV hesaplama",
         "intro": "Müteahhitten alınan konutun net alanı ve bedeline göre KDV'yi hesaplayın (ruhsatı 1 Nisan 2022 sonrası projeler).",
         "fields": [
-            _field("v-bedel", "KDV hariç satış bedeli (TL)", _num("v-bedel", 6000000, step="10000")),
+            _field("v-bedel", "KDV hariç bedel", _num("v-bedel", 6000000, money=True)),
             _field("v-m2", "Net alan (m²)", _num("v-m2", 120, step="1", min_="1")),
             _field("v-tur", "Proje türü", _select("v-tur", [("0.10", "Normal proje – 150 m²'ye kadar %10"), ("0.01", "6306 sayılı Kanun kapsamında dönüşüm – %1")])),
         ],
@@ -247,12 +258,13 @@ CALCS = {
             ("v-r-kdv", "KDV"), ("v-r-toplam", "KDV dahil bedel"), ("v-r-oran", "Efektif oran"),
         ],
         "note": "Net alanın 150 m²'yi aşan kısmına isabet eden bedel %20 KDV'ye tabidir. Ruhsatı 1 Nisan 2022 öncesi projelerde oran farklı olabilir; satıcıdan yazılı bilgi isteyin.",
+        "primary": ("v-r-toplam",),
     },
     "ltv": {
         "title": "Azami konut kredisi tutarı hesaplama",
         "intro": "Ekspertiz değeri ve enerji sınıfını girin; BDDK kurallarına göre bankanın verebileceği en yüksek krediyi görün.",
         "fields": [
-            _field("l-deger", "Ekspertiz değeri (TL)", _num("l-deger", 5000000, step="10000")),
+            _field("l-deger", "Ekspertiz değeri", _num("l-deger", 5000000, money=True)),
             _field("l-enerji", "Enerji kimlik belgesi sınıfı", _select("l-enerji", [("ab", "A veya B"), ("c", "C"), ("d", "D ve altı / belgesiz")])),
             _field("l-ilk", "Üzerinize kayıtlı başka konut var mı?", _select("l-ilk", [("1", "Hayır – ilk konutum"), ("0.25", "Evet – oran %75 azaltılır")])),
         ],
@@ -260,6 +272,7 @@ CALCS = {
             ("l-r-oran", "Azami kredi/değer oranı"), ("l-r-kredi", "Azami kredi"), ("l-r-pesinat", "En az peşinat"),
         ],
         "note": "BDDK'nın 29.01.2026 tarihli 11364 sayılı kararına göre. Banka; gelir, kredi notu ve kendi politikası nedeniyle daha düşük tutar verebilir.",
+        "primary": ("l-r-kredi",),
     },
 }
 
@@ -267,22 +280,35 @@ CALCS = {
 def calc_html(kind: str) -> str:
     c = CALCS[kind]
     fields = "\n".join(c["fields"])
-    results = "\n".join(
-        f'<div class="calc-row"><span>{html.escape(label)}</span><output id="{rid}">–</output></div>'
-        for rid, label in c["results"]
-    )
+    primary = set(c.get("primary", ()))
+
+    def rows(items, cls=""):
+        extra = f" {cls}" if cls else ""
+        return "\n".join(
+            f'<div class="calc-row{" primary" if rid in primary else ""}{extra}">'
+            f'<span>{html.escape(label)}</span><output id="{rid}">–</output></div>'
+            for rid, label in items
+        )
+
+    hi = [(r, l) for r, l in c["results"] if r in primary]
+    lo = [(r, l) for r, l in c["results"] if r not in primary]
+    breakdown = f'<div class="calc-breakdown">{rows(lo)}</div>' if lo else ""
     return f"""
 <section class="calc" data-calc="{kind}" aria-labelledby="calc-{kind}-title">
-  <h3 id="calc-{kind}-title">{html.escape(c['title'])}</h3>
-  <p class="calc-intro">{html.escape(c['intro'])}</p>
-  <form class="calc-form" autocomplete="off">
-    {fields}
-  </form>
-  <div class="calc-results" aria-live="polite">
-    {results}
+  <div class="calc-highlight" aria-live="polite">
+    <p class="calc-results-title">Sonuç</p>
+    {rows(hi)}
   </div>
-  <p class="calc-note">{html.escape(c['note'])}</p>
-  <noscript><p class="calc-note">Hesaplama aracı için JavaScript gereklidir.</p></noscript>
+  <div class="calc-body">
+    <h3 id="calc-{kind}-title">{html.escape(c['title'])}</h3>
+    <p class="calc-intro">{html.escape(c['intro'])}</p>
+    <form class="calc-form" autocomplete="off">
+      {fields}
+    </form>
+    <p class="calc-note">{html.escape(c['note'])}</p>
+    <noscript><p class="calc-note">Hesaplama aracı için JavaScript gereklidir.</p></noscript>
+  </div>
+  {breakdown}
 </section>
 """
 
