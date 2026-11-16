@@ -183,7 +183,7 @@ CALCS = {
         "intro": "Satış bedeli ve anlaştığınız oranı girin; KDV dahil komisyonu görün.",
         "fields": [
             _field("k-bedel", "Satış bedeli", _num("k-bedel", 5000000, money=True)),
-            _field("k-oran", "Hizmet bedeli oranı (%) – yasal üst sınır 2", _num("k-oran", 2, step="0.1")),
+            _field("k-oran", "Oran (%)", _num("k-oran", 2, step="0.1")),
         ],
         "results": [
             ("k-r-net", "Hizmet bedeli"), ("k-r-kdv", "KDV (%20)"), ("k-r-toplam", "Ödenecek toplam"),
@@ -212,7 +212,7 @@ CALCS = {
         "intro": "İlçenizin yöresel katsayısını seçin; satış ve ipotek işlemleri için ödenecek döner sermaye ücretini görün.",
         "fields": [
             _field("d-katsayi", "Yöresel katsayı", _select("d-katsayi", KATSAYI_OPTS)),
-            _field("d-ipotek", "Konut kredisi (ipotek) var mı?", _select("d-ipotek", [("1", "Evet – satış + ipotek"), ("0", "Hayır – yalnızca satış")])),
+            _field("d-ipotek", "İpotek var mı?", _select("d-ipotek", [("1", "Evet – satış + ipotek"), ("0", "Hayır – yalnızca satış")])),
         ],
         "results": [
             ("d-r-islem", "Bir işlem ücreti"), ("d-r-toplam", "Toplam döner sermaye"),
@@ -252,7 +252,7 @@ CALCS = {
         "fields": [
             _field("v-bedel", "KDV hariç bedel", _num("v-bedel", 6000000, money=True)),
             _field("v-m2", "Net alan (m²)", _num("v-m2", 120, step="1", min_="1")),
-            _field("v-tur", "Proje türü", _select("v-tur", [("0.10", "Normal proje – 150 m²'ye kadar %10"), ("0.01", "6306 sayılı Kanun kapsamında dönüşüm – %1")])),
+            _field("v-tur", "Proje türü", _select("v-tur", [("0.10", "Normal – 150 m²'ye kadar %10"), ("0.01", "Dönüşüm (6306) – %1")]), wide=True),
         ],
         "results": [
             ("v-r-kdv", "KDV"), ("v-r-toplam", "KDV dahil bedel"), ("v-r-oran", "Efektif oran"),
@@ -265,8 +265,8 @@ CALCS = {
         "intro": "Ekspertiz değeri ve enerji sınıfını girin; BDDK kurallarına göre bankanın verebileceği en yüksek krediyi görün.",
         "fields": [
             _field("l-deger", "Ekspertiz değeri", _num("l-deger", 5000000, money=True)),
-            _field("l-enerji", "Enerji kimlik belgesi sınıfı", _select("l-enerji", [("ab", "A veya B"), ("c", "C"), ("d", "D ve altı / belgesiz")])),
-            _field("l-ilk", "Üzerinize kayıtlı başka konut var mı?", _select("l-ilk", [("1", "Hayır – ilk konutum"), ("0.25", "Evet – oran %75 azaltılır")])),
+            _field("l-enerji", "Enerji sınıfı", _select("l-enerji", [("ab", "A veya B"), ("c", "C"), ("d", "D ve altı / belgesiz")])),
+            _field("l-ilk", "Başka konutunuz var mı?", _select("l-ilk", [("1", "Hayır – ilk konutum"), ("0.25", "Evet – oran %75 azaltılır")]), wide=True),
         ],
         "results": [
             ("l-r-oran", "Azami kredi/değer oranı"), ("l-r-kredi", "Azami kredi"), ("l-r-pesinat", "En az peşinat"),
@@ -571,9 +571,18 @@ def main() -> None:
             sys.exit(f"{p['file']}: aynı path birden fazla sayfada: {p['path']}")
         seen.add(p["path"])
 
+    # Statik site derlemesi Flutter uygulamasını silmesin.
+    hesapla = OUT / "hesapla"
+    saved_app = ROOT / ".tmp_hesapla"
+    if saved_app.exists():
+        shutil.rmtree(saved_app)
+    if hesapla.exists():
+        shutil.move(str(hesapla), str(saved_app))
     if OUT.exists():
         shutil.rmtree(OUT)
     shutil.copytree(SRC / "static", OUT)
+    if saved_app.exists():
+        shutil.move(str(saved_app), str(OUT / "hesapla"))
 
     for page in pages:
         target = OUT / (page["path"] + ".html" if page["path"] else "index.html")

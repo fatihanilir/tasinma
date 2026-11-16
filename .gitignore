@@ -47,3 +47,4 @@ app.*.map.json
 
 # Firebase Hosting çıktısı (tools/build_all.sh üretir)
 /public/
+.tmp_hesapla/
