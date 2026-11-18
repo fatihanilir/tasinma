@@ -6,5 +6,6 @@ cd "$(dirname "$0")/.."
 
 flutter build web --release --base-href /hesapla/ --pwa-strategy=none
 python3 tools/build_site.py
+rm -rf public/hesapla
 cp -R build/web public/hesapla
 echo "Hazır: public/ (site) + public/hesapla/ (uygulama)"

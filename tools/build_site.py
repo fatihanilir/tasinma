@@ -335,8 +335,10 @@ def layout(page: dict, articles: list) -> str:
     is_article = page["type"] == "article"
     main_class = "home" if page["path"] == "" else ("article" if is_article else "page")
 
+    # AdSense yalnızca yayıncı içeriği olan sayfalarda; yasal, iletişim ve hata sayfalarında yok.
+    ads_ok = page.get("ads", "yes") != "no"
     body = page["body"]
-    body = body.replace("<!-- ad -->", AD_UNIT)
+    body = body.replace("<!-- ad -->", AD_UNIT if ads_ok else "")
     body = body.replace("<!-- rehber-listesi -->", article_sections(articles))
     body = body.replace("<!-- rehber-one-cikan -->", article_cards(articles[:6]))
     body = body.replace("<!-- son-rehberler -->", article_cards(articles[:3], compact=True))
@@ -442,6 +444,11 @@ güncel bilgi alın. Bir hata fark ederseniz <a href="/iletisim">bize yazın</a>
 """
 
     calc_script = '<script defer src="/calc.js"></script>' if uses_calc else ""
+    ads_script = (
+        f'<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={AD_CLIENT}" crossorigin="anonymous"></script>'
+        if ads_ok else ""
+    )
+    robots = f'<meta name="robots" content="{page["robots"]}">' if page.get("robots") else ""
     og_type = "article" if is_article else "website"
 
     return f"""<!DOCTYPE html>
@@ -454,6 +461,7 @@ güncel bilgi alın. Bir hata fark ederseniz <a href="/iletisim">bize yazın</a>
   <meta name="description" content="{html.escape(desc)}">
   <meta name="author" content="{AUTHOR_NAME}">
   <link rel="canonical" href="{canonical}">
+  {robots}
   <link rel="alternate" type="application/rss+xml" title="{SITE_NAME} rehberleri" href="{SITE}/feed.xml">
   <meta property="og:site_name" content="{SITE_NAME}">
   <meta property="og:type" content="{og_type}">
@@ -469,7 +477,7 @@ güncel bilgi alın. Bir hata fark ederseniz <a href="/iletisim">bize yazın</a>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/site.css">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={AD_CLIENT}" crossorigin="anonymous"></script>
+  {ads_script}
   {calc_script}
   {jsonld}
 </head>
