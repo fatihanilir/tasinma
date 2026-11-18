@@ -449,6 +449,12 @@ güncel bilgi alın. Bir hata fark ederseniz <a href="/iletisim">bize yazın</a>
         if ads_ok else ""
     )
     robots = f'<meta name="robots" content="{page["robots"]}">' if page.get("robots") else ""
+    # Ana sayfadan uygulamaya geçişi hızlandırmak için uygulama dosyası boşta önceden indirilir.
+    app_prefetch = (
+        '<link rel="prefetch" href="/hesapla/main.dart.js" as="script">\n'
+        '  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>'
+        if page["path"] == "" else ""
+    )
     og_type = "article" if is_article else "website"
 
     return f"""<!DOCTYPE html>
@@ -479,6 +485,7 @@ güncel bilgi alın. Bir hata fark ederseniz <a href="/iletisim">bize yazın</a>
   <link rel="stylesheet" href="/site.css">
   {ads_script}
   {calc_script}
+  {app_prefetch}
   {jsonld}
 </head>
 <body>

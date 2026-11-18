@@ -1,4 +1,5 @@
 import 'package:url_launcher/url_launcher.dart';
+import 'page_reload.dart';
 
 class AppLinks {
   static const String supportEmail = 'info@cebindeneve.com';
@@ -25,6 +26,12 @@ class AppLinks {
 
   static Future<void> open(String url) async {
     await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  }
+
+  /// Web'de aynı sekmede siteye döner; mobilde tarayıcıda açar.
+  static Future<void> openSite() async {
+    if (goToUrl('$site/')) return;
+    await open('$site/');
   }
 
   static Future<void> mail({String subject = 'Cebinden Eve destek'}) async {

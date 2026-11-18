@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/homes_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_links.dart';
 import '../utils/page_reload.dart';
 import '../widgets/account_sheet.dart';
 import 'auth_screen.dart';
@@ -220,27 +221,34 @@ class _HomeScreenState extends State<HomeScreen> {
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  // Logo
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppColors.forest.withOpacity(
-                                            0.15,
-                                          ),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
+                                  // Logo → cebindeneve.com ana sayfası
+                                  MouseRegion(
+                                    cursor: SystemMouseCursors.click,
+                                    child: GestureDetector(
+                                      onTap: AppLinks.openSite,
+                                      child: Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: AppColors.forest
+                                                  .withOpacity(0.15),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: Image.asset(
-                                        'assets/logo.png',
-                                        fit: BoxFit.cover,
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          child: Image.asset(
+                                            'assets/logo.png',
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
