@@ -4,11 +4,11 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-/// AdMob reklam birimleri. Hesap açılınca gerçek kimliklerle değiştirilecek;
-/// debug derlemede her zaman Google'ın test kimlikleri kullanılır.
+/// AdMob reklam birimleri. Debug derlemede her zaman Google'ın test
+/// kimlikleri kullanılır (kendi reklamına tıklamak hesabı riske atar).
 class AdMobIds {
-  static const _androidBanner = 'ca-app-pub-3940256099942544/9214589741';
-  static const _iosBanner = 'ca-app-pub-3940256099942544/2435281174';
+  static const _androidBanner = 'ca-app-pub-6659689615274144/6382245284';
+  static const _iosBanner = 'ca-app-pub-6659689615274144/4177260484';
 
   static const _testAndroidBanner = 'ca-app-pub-3940256099942544/9214589741';
   static const _testIosBanner = 'ca-app-pub-3940256099942544/2435281174';
