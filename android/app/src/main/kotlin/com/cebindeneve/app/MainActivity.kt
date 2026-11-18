@@ -1,4 +1,4 @@
-package com.evhesap.ev_hesap_app
+package com.cebindeneve.app
 
 import io.flutter.embedding.android.FlutterActivity
 

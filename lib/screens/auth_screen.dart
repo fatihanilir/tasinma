@@ -113,6 +113,19 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                             const SizedBox(height: 16),
                             if (!_showEmailForm) ...[
+                              if (auth.isAppleSignInAvailable) ...[
+                                _SignInButton(
+                                  label: 'Apple ile devam et',
+                                  icon: Icons.apple,
+                                  backgroundColor: Colors.black,
+                                  textColor: Colors.white,
+                                  onTap: () async {
+                                    final ok = await auth.signInWithApple();
+                                    await _handleSuccess(ok);
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                              ],
                               _SignInButton(
                                 label: 'Google ile devam et',
                                 icon: Icons.g_mobiledata_rounded,

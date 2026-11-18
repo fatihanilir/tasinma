@@ -28,10 +28,9 @@ class AppLinks {
     await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
 
-  /// Web'de aynı sekmede siteye döner; mobilde tarayıcıda açar.
+  /// Web'de aynı sekmede siteye döner; mobil uygulamada bir şey yapmaz.
   static Future<void> openSite() async {
-    if (goToUrl('$site/')) return;
-    await open('$site/');
+    goToUrl('$site/');
   }
 
   static Future<void> mail({String subject = 'Cebinden Eve destek'}) async {

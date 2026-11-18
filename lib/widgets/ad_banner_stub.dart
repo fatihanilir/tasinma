@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../theme/app_theme.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../services/ads_service_mobile.dart';
 import 'ad_unit.dart';
 
 export 'ad_unit.dart';
 
-/// Mobil / non-web: placeholder (AdSense yalnızca web).
-class AdBannerPlaceholder extends StatelessWidget {
+/// Mobil: AdMob banner. Yüklenene kadar ve yüklenemezse yer kaplamaz.
+class AdBannerPlaceholder extends StatefulWidget {
   final String label;
   final bool compact;
   final AdUnit unit;
@@ -19,28 +19,70 @@ class AdBannerPlaceholder extends StatelessWidget {
   });
 
   @override
+  State<AdBannerPlaceholder> createState() => _AdBannerPlaceholderState();
+}
+
+class _AdBannerPlaceholderState extends State<AdBannerPlaceholder> {
+  BannerAd? _ad;
+  bool _loaded = false;
+  bool _requested = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_requested) return;
+    _requested = true;
+    _load(MediaQuery.sizeOf(context).width);
+  }
+
+  Future<void> _load(double screenWidth) async {
+    if (!await AdsService.ready || !mounted) return;
+
+    final AdSize size;
+    if (widget.unit == AdUnit.display) {
+      final adaptive =
+          await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+        (screenWidth - 36).truncate(),
+      );
+      if (adaptive == null || !mounted) return;
+      size = adaptive;
+    } else {
+      size = AdSize.mediumRectangle;
+    }
+
+    final ad = BannerAd(
+      adUnitId: AdMobIds.banner,
+      size: size,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          if (mounted) setState(() => _loaded = true);
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          if (mounted) setState(() => _ad = null);
+        },
+      ),
+    );
+    _ad = ad;
+    await ad.load();
+  }
+
+  @override
+  void dispose() {
+    _ad?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final height = compact ? 56.0 : unit.minHeight;
-    return Semantics(
-      label: 'Reklam alanı',
-      child: Container(
-        width: double.infinity,
-        height: height,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF0EBE1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.line),
-        ),
-        child: Center(
-          child: Text(
-            '$label\n(${unit.name})',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
-              fontSize: 12,
-              color: AppColors.muted,
-            ),
-          ),
-        ),
+    final ad = _ad;
+    if (ad == null || !_loaded) return const SizedBox.shrink();
+    return Center(
+      child: SizedBox(
+        width: ad.size.width.toDouble(),
+        height: ad.size.height.toDouble(),
+        child: AdWidget(ad: ad),
       ),
     );
   }

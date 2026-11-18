@@ -229,7 +229,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                     top: BorderSide(color: AppColors.line, width: 1),
                   ),
                 ),
-                padding: const EdgeInsets.fromLTRB(18, 8, 18, 8),
+                // Kaydet butonuna yakın reklam kazara tıklamaya yol açar (AdMob politikası).
+                padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
                 child: const AdBannerPlaceholder(
                   label: 'Hesap · sticky',
                   unit: AdUnit.display,

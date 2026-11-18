@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/homes_provider.dart';
+import 'services/ads_service.dart';
 import 'screens/auth_screen.dart';
 import 'screens/blocked_screen.dart';
 import 'screens/consent_screen.dart';
@@ -28,6 +29,7 @@ void main() async {
     }
   }
   runApp(const EvHesapApp());
+  if (!kIsWeb) AdsService.init();
 }
 
 class EvHesapApp extends StatelessWidget {

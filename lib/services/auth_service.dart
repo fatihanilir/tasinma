@@ -1,10 +1,18 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import '../firebase_options.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+        ? DefaultFirebaseOptions.ios.iosClientId
+        : null,
+    serverClientId:
+        kIsWeb ? null : DefaultFirebaseOptions.googleServerClientId,
+  );
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
@@ -28,6 +36,13 @@ class AuthService {
     } catch (e) {
       rethrow;
     }
+  }
+
+  Future<UserCredential> signInWithApple() {
+    final provider = AppleAuthProvider()
+      ..addScope('email')
+      ..addScope('name');
+    return _auth.signInWithProvider(provider);
   }
 
   Future<UserCredential> signInWithEmail(String email, String password) async {
@@ -66,6 +81,10 @@ class AuthService {
       );
       return;
     }
+    if (signInProvider == 'apple.com') {
+      await user.reauthenticateWithProvider(AppleAuthProvider());
+      return;
+    }
     if (signInProvider == 'google.com') {
       if (kIsWeb) {
         await user.reauthenticateWithPopup(GoogleAuthProvider());
@@ -92,6 +111,7 @@ class AuthService {
     } catch (_) {}
   }
 
-  /// Apple web için ayrı Firebase + Apple Developer kurulumu gerekir.
-  bool get isAppleSignInAvailable => !kIsWeb;
+  /// App Store, Google ile giriş sunan uygulamalarda Apple ile girişi şart koşar.
+  bool get isAppleSignInAvailable =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 }

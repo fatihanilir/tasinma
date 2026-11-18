@@ -15,8 +15,6 @@ dependencies:
   firebase_auth: ^5.4.1
   cloud_firestore: ^5.6.0
   google_sign_in: ^6.2.2
-  sign_in_with_apple: ^6.1.4
-  
   # State Management
   provider: ^6.1.2
   
@@ -34,14 +32,26 @@ dependencies:
   web: ^1.1.1
   firebase_analytics: ^11.6.0
   firebase_app_check: ^0.3.2+10
+  google_mobile_ads: ^9.2.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
   
   assets:
     - assets/logo.png
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "assets/icon/adaptive_bg.png"
+  adaptive_icon_foreground: "assets/icon/adaptive_fg.png"
+  adaptive_icon_foreground_inset: 22
+  min_sdk_android: 21

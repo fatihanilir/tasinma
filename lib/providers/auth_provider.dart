@@ -222,6 +222,32 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> signInWithApple() async {
+    if (!_requireConsent()) return false;
+    try {
+      _status = AuthStatus.loading;
+      _errorMessage = null;
+      notifyListeners();
+
+      final result = await _authService.signInWithApple();
+      _logAuth(result, 'apple');
+      await _clearGuestFlag();
+      _status = AuthStatus.authenticated;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      final text = e.toString().toLowerCase();
+      if (text.contains('cancel') || text.contains('1001')) {
+        _status = AuthStatus.unauthenticated;
+      } else {
+        _status = AuthStatus.error;
+        _errorMessage = 'Apple ile giriş yapılamadı';
+      }
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> signInWithEmail(String email, String password) async {
     if (!_requireConsent()) return false;
     try {

@@ -6,6 +6,7 @@ import '../providers/homes_provider.dart';
 import '../screens/admin_screen.dart';
 import '../screens/auth_screen.dart';
 import '../screens/support_screen.dart';
+import '../services/ads_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_links.dart';
 
@@ -125,6 +126,16 @@ class _AccountSheet extends StatelessWidget {
               icon: Icons.description_outlined,
               label: 'Kullanım Koşulları',
               onTap: () => AppLinks.open(AppLinks.terms),
+            ),
+            FutureBuilder<bool>(
+              future: AdsService.privacyOptionsRequired,
+              builder: (context, snap) => snap.data == true
+                  ? _Item(
+                      icon: Icons.tune_rounded,
+                      label: 'Reklam gizlilik ayarları',
+                      onTap: AdsService.showPrivacyOptions,
+                    )
+                  : const SizedBox.shrink(),
             ),
             if (auth.isAuthenticated) ...[
               const Divider(indent: 16, endIndent: 16),
