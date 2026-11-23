@@ -76,20 +76,91 @@ Upload SHA-1 (Firebase’e kayıtlı):
 ## Firebase / Google Cloud
 
 - Web / Android / iOS uygulamaları Firebase’de kayıtlı.
-- API anahtarları Cloud Console’da kısıtlandı (Android SHA, iOS bundle, web siteleri).
 - App Check: web’de Recaptcha; mobilde şimdilik kapalı (başlatırken çökme/hata).
 - Authentication’da **Apple** giriş yöntemini açmak iOS için gerekli (henüz kullanıcıya kaldı).
-- Play’den sonra Google’ın **App signing SHA-1**’ini Firebase + Cloud Android anahtarına ekle.
+- Google ile giriş sağlayıcısı açık olmalı. Web client ID
+  (`lib/firebase_options.dart` → `googleServerClientId`):
+  `381980641519-hskendkgt9ivm58pp0rkdus1cti9d0se.apps.googleusercontent.com`
+  Firebase Authentication → Google ekranındaki Web client ID bununla aynı kalacak.
+- Cloud **Android key (auto created by Firebase)** kısıtı **None**.
+  Boş **Android apps** listesiyle kaydetme; anahtar bütün uygulamaları reddeder.
+  iOS anahtarı iOS uygulamalarına, Browser anahtarı HTTP referrer’a kısıtlı.
+- OAuth consent: **In production**, **External**. **Back to testing** / **Make internal** yok.
 
-## Play Console — sıradaki
+Play’in uygulama imzalama SHA-1’i Firebase’e eklendi (21 Kas 2026).
+Android OAuth istemcisi aynı gün oluştu, parmak izi bununla aynı:
 
-1. Hesap kurulumu bitince (kimlik / telefon / cihaz doğrulama) uygulamayı oluştur.
-2. Zorunlu formlar: gizlilik `https://cebindeneve.com/gizlilik`, reklam var, 18+,
-   hesap silme `https://cebindeneve.com/hesap-silme`, veri güvenliği (e-posta, analytics,
-   reklam kimliği, isteğe bağlı kayıtlar).
-3. Mağaza: ikon 512, feature graphic 1024×500, ≥2 ekran görüntüsü, site URL.
-4. Kapalı test: AAB yükle, ≥12 testçi, 14 gün. Yeni kişisel hesapta şart.
-5. “Uygulama imzalama” SHA-1’ini buraya / Cursor’a ilet → Firebase’e eklenecek.
+`F0:C9:60:74:75:AD:6F:FE:22:53:C8:3F:8C:5A:E4:9E:1E:91:9A:75`
+
+Firebase’de duran diğer parmak izleri: upload SHA-1 `3D:14:DB:…`,
+bir SHA-1 daha `AC:95:56:…`, upload SHA-256 `A7:95:B6:…`.
+Play **Klasik anahtar** SHA-256’sı henüz eklenmiş sayılmaz. Yarın ilk iş bu.
+
+## Play Console — 23 Kas 2026
+
+Hesap kişisel, kimlik doğrulandı. Uygulama: Cebinden Eve,
+`com.cebindeneve.app`, Türkçe, ücretsiz. Satıcı beyanı: satıcı hesabı değil.
+
+Bitenler: veri güvenliği, reklam kimliği (evet, amaç reklam), devlet uygulaması hayır,
+finans özelliği yok, içerik derecelendirmesi, hedef kitle 18+, reklam beyanı,
+gizlilik `https://cebindeneve.com/gizlilik`, hesap silme `https://cebindeneve.com/hesap-silme`.
+Mağaza ayarı: kategori Finans, e-posta `info@cebindeneve.com`, site `https://cebindeneve.com`,
+telefon boş. Mağaza girişi kaydedildi. Yapay zeka beyanı: öğeleri etiketleme.
+
+Kapalı test (Alpha) sürümü `1.0.0 (1)` incelemeye gönderildi ve yayınlandı.
+Ülke yalnız Türkiye. Test listesine şimdilik yalnızca hesap sahibi eklendi;
+kendisi katıldı (1 kayıtlı testçi). Herkese açık
+`https://play.google.com/store/apps/details?id=com.cebindeneve.app` açılmaz.
+Katılım bağlantısı Play Console → Kapalı test → test kullanıcıları içindedir.
+
+Üretim kilitli. **Üretime başvur** gri kalır. Şart: en az 12 kişi aynı anda
+kayıtlı kalsın, sonra 14 gün. E-posta listesine yazmak yetmez; bağlantıdan katılmak sayılır.
+
+Yüklenen AAB bu Windows makinede üretildi:
+`build/app/outputs/bundle/release/app-release.aab` (20 Kas 2026).
+İmza doğrulandı. Flutter’ın native sembol soyma adımı cmdline-tools yüzünden
+exit 1 verdi; paket yine de oluştu. cmdline-tools sonradan kuruldu, temiz
+yeniden derleme yapılmadı. JAVA_HOME PyCharm JBR olmasın
+(`jlink` yok). Bu makinede Temurin 17:
+`C:\Users\Fatih-ANILIR\jdks\jdk-17.0.21.1+2`.
+
+Mağaza görselleri `store/play/` içinde:
+
+- `icon-512.png` — 512×512
+- `feature-1024x500.png` — 1024×500
+- `01-giris.png`, `02-hesap.png`, `03-faiz.png`, `04-taksit.png`, `05-kirilim.png`
+  — 1080×1920
+
+Anahtar klasörü bu makineye kopyalandı:
+`C:\Users\Fatih-ANILIR\cebindeneve-keys\` (`upload-keystore.jks`, `key.properties`).
+`key.properties` içindeki `storeFile` Windows yoluna çevrildi. Şifreler dosyada;
+buraya yazma. Mac’teki asıl kopya `~/cebindeneve-keys/` duruyor olmalı.
+`firebase login` bu Windows makinede hâlâ yapılmadı.
+
+## Yarın — Google ile giriş
+
+Play’den kurulan sürümde **Google ile devam et** hâlâ
+“Google ile giriş yapılamadı” diyor. Uygulama silinip kapalı testten
+yeniden yüklendi, 1 saatten fazla beklendi, düzelmedi.
+`ffatihanilir@gmail.com` doğru hesap; bu hesap uygulamada admin.
+
+Hata metni bütün istisnaları yutuyor (`lib/providers/auth_provider.dart`
+→ `_friendlyError`). Asıl kod büyük ihtimalle ApiException 10
+(paket + imza, OAuth istemcisiyle eşleşmiyor). Gizlilik kutusu
+işaretsizse metin farklıdır: koşulları onaylayın.
+
+Yarın sıra:
+
+1. Play → Uygulama imzalama → Uygulama imzalama anahtarı → **Klasik anahtar**
+   SHA-256’yı Firebase Android uygulamasına ekle. Yükleme anahtarının
+   SHA-256’sı (`A7:95:B6…`) zaten kayıtlı; onu tekrarlama.
+2. Firebase Authentication → Google → Web client ID yukarıdaki
+   `381980641519-hskendk…` ile aynı mı bak. Farklıysa düzelt.
+3. Hâlâ olmuyorsa telefonda USB hata ayıklama aç, `adb logcat` ile
+   `sign_in_failed` / `ApiException` satırını al. Yeni AAB şart değil;
+   SHA kaydı sunucu tarafında. E-posta ile giriş bu hatadan bağımsız çalışır.
+4. Google giriş düzelince katılım bağlantısını 11 kişiye daha gönder.
+   12 kayıt dolunca 14 gün sayacı başlar. Ondan önce üretime başvurma.
 
 ## App Store / Xcode
 
@@ -112,4 +183,4 @@ Upload SHA-1 (Firebase’e kayıtlı):
 
 ---
 
-*Son güncelleme: 2026-11-20 — AdMob kimlikleri canlıda, AAB derlendi, Play hesap kurulumu kullanıcıda.*
+*Son güncelleme: 2026-11-23 — Kapalı test yayında, 1 testçi (hesap sahibi). Üretim kilitli (12 kişi, 14 gün). Play imzalama SHA-1 Firebase’de. Google ile giriş Play sürümünde hâlâ kırık; yarın Play SHA-256 ve Auth Web client ID.*
