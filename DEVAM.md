@@ -94,7 +94,9 @@ Android OAuth istemcisi aynı gün oluştu, parmak izi bununla aynı:
 
 Firebase’de duran diğer parmak izleri: upload SHA-1 `3D:14:DB:…`,
 bir SHA-1 daha `AC:95:56:…`, upload SHA-256 `A7:95:B6:…`.
-Play **Klasik anahtar** SHA-256’sı henüz eklenmiş sayılmaz. Yarın ilk iş bu.
+Play **Klasik anahtar** SHA-256’sı kopyalandı, Firebase’e henüz yapıştırılmadı:
+
+`CF:9F:E0:7D:24:9D:AB:B1:C4:1C:FB:C6:2E:C0:13:C5:6D:CE:A5:A4:A0:D5:B2:8A:B4:DB:84:00:64:3D:2E:17`
 
 ## Play Console — 23 Kas 2026
 
@@ -151,9 +153,11 @@ işaretsizse metin farklıdır: koşulları onaylayın.
 
 Yarın sıra:
 
-1. Play → Uygulama imzalama → Uygulama imzalama anahtarı → **Klasik anahtar**
-   SHA-256’yı Firebase Android uygulamasına ekle. Yükleme anahtarının
-   SHA-256’sı (`A7:95:B6…`) zaten kayıtlı; onu tekrarlama.
+1. Firebase → Cebinden Eve Android → **Add fingerprint**. Play Klasik anahtar
+   SHA-256’sını yapıştır:
+   `CF:9F:E0:7D:24:9D:AB:B1:C4:1C:FB:C6:2E:C0:13:C5:6D:CE:A5:A4:A0:D5:B2:8A:B4:DB:84:00:64:3D:2E:17`
+   Yükleme anahtarının SHA-256’sı (`A7:95:B6…`) zaten kayıtlı; onu tekrarlama.
+   `F0:C9:60…` SHA-1 satırı da kalsın.
 2. Firebase Authentication → Google → Web client ID yukarıdaki
    `381980641519-hskendk…` ile aynı mı bak. Farklıysa düzelt.
 3. Hâlâ olmuyorsa telefonda USB hata ayıklama aç, `adb logcat` ile
@@ -183,4 +187,4 @@ Yarın sıra:
 
 ---
 
-*Son güncelleme: 2026-11-23 — Kapalı test yayında, 1 testçi (hesap sahibi). Üretim kilitli (12 kişi, 14 gün). Play imzalama SHA-1 Firebase’de. Google ile giriş Play sürümünde hâlâ kırık; yarın Play SHA-256 ve Auth Web client ID.*
+*Son güncelleme: 2026-11-24 — Kapalı test yayında, 1 testçi. Google ile giriş Play sürümünde hâlâ kırık. Play Klasik anahtar SHA-256 kopyalandı, Firebase’e yarın eklenecek.*
