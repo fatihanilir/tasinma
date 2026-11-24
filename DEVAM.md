@@ -94,9 +94,15 @@ Android OAuth istemcisi aynı gün oluştu, parmak izi bununla aynı:
 
 Firebase’de duran diğer parmak izleri: upload SHA-1 `3D:14:DB:…`,
 bir SHA-1 daha `AC:95:56:…`, upload SHA-256 `A7:95:B6:…`.
-Play **Klasik anahtar** SHA-256’sı kopyalandı, Firebase’e henüz yapıştırılmadı:
+**Play’den kurulan APK’nın gerçek imzası** (telefondan `apksigner` ile okundu, 24 Kas 2026).
+Google ile giriş bu ikisi Firebase’e eklenince çalıştı:
 
-`CF:9F:E0:7D:24:9D:AB:B1:C4:1C:FB:C6:2E:C0:13:C5:6D:CE:A5:A4:A0:D5:B2:8A:B4:DB:84:00:64:3D:2E:17`
+- SHA-1 `06:52:DC:A3:27:46:DB:D5:77:41:B2:11:02:88:6B:7F:17:DA:6D:F0`
+- SHA-256 `3D:7D:68:A3:BA:19:28:3F:F2:B1:37:53:8A:0F:A8:2F:BD:AF:3D:53:F5:BE:B9:19:AD:6B:01:35:62:08:C9:0F`
+
+`F0:C9:60…` ve `CF:9F:E0…` Play sayfasından kopyalandı ama yüklü APK’ya uymadı.
+Firebase’de zararsız; silme. Emin olmak için Play sayfasına değil, kurulu APK’ya bak:
+`adb shell pm path com.cebindeneve.app` → `adb pull` → `apksigner verify --print-certs`.
 
 ## Play Console — 23 Kas 2026
 
@@ -139,32 +145,20 @@ Anahtar klasörü bu makineye kopyalandı:
 buraya yazma. Mac’teki asıl kopya `~/cebindeneve-keys/` duruyor olmalı.
 `firebase login` bu Windows makinede hâlâ yapılmadı.
 
-## Yarın — Google ile giriş
+## Google ile giriş — çözüldü (24 Kas 2026)
 
-Play’den kurulan sürümde **Google ile devam et** hâlâ
-“Google ile giriş yapılamadı” diyor. Uygulama silinip kapalı testten
-yeniden yüklendi, 1 saatten fazla beklendi, düzelmedi.
-`ffatihanilir@gmail.com` doğru hesap; bu hesap uygulamada admin.
+Play’den kurulan sürümde Google ile giriş çalışıyor. Sebep: yüklü APK’nın
+imzası Firebase’e eklenen parmak izleriyle uyuşmuyordu. Yukarıdaki
+`06:52:DC…` SHA-1 ve `3D:7D:68…` SHA-256 eklenince düzeldi.
 
-Hata metni bütün istisnaları yutuyor (`lib/providers/auth_provider.dart`
-→ `_friendlyError`). Asıl kod büyük ihtimalle ApiException 10
-(paket + imza, OAuth istemcisiyle eşleşmiyor). Gizlilik kutusu
-işaretsizse metin farklıdır: koşulları onaylayın.
+Uygulamadaki hata metni bütün istisnaları yutuyor (`lib/providers/auth_provider.dart`
+→ `_friendlyError`); gerçek kod için `adb logcat`.
 
-Yarın sıra:
+Sıradaki: katılım bağlantısını 11 kişiye daha gönder. 12 kayıt dolunca
+14 gün sayacı başlar. Ondan önce üretime başvurma.
 
-1. Firebase → Cebinden Eve Android → **Add fingerprint**. Play Klasik anahtar
-   SHA-256’sını yapıştır:
-   `CF:9F:E0:7D:24:9D:AB:B1:C4:1C:FB:C6:2E:C0:13:C5:6D:CE:A5:A4:A0:D5:B2:8A:B4:DB:84:00:64:3D:2E:17`
-   Yükleme anahtarının SHA-256’sı (`A7:95:B6…`) zaten kayıtlı; onu tekrarlama.
-   `F0:C9:60…` SHA-1 satırı da kalsın.
-2. Firebase Authentication → Google → Web client ID yukarıdaki
-   `381980641519-hskendk…` ile aynı mı bak. Farklıysa düzelt.
-3. Hâlâ olmuyorsa telefonda USB hata ayıklama aç, `adb logcat` ile
-   `sign_in_failed` / `ApiException` satırını al. Yeni AAB şart değil;
-   SHA kaydı sunucu tarafında. E-posta ile giriş bu hatadan bağımsız çalışır.
-4. Google giriş düzelince katılım bağlantısını 11 kişiye daha gönder.
-   12 kayıt dolunca 14 gün sayacı başlar. Ondan önce üretime başvurma.
+Play bildirimi (23 Kas): `play-services-safetynet:18.0.0` kullanımdan kalkıyor.
+Kaynak `firebase_app_check`; mobilde etkinleştirilmiyor. Ret değil, testi durdurmaz.
 
 ## App Store / Xcode
 
@@ -176,6 +170,13 @@ Yarın sıra:
 
 - Logo tıklanınca web’de ana sayfaya döner; native app’te no-op.
 - `/hesapla` yavaş: splash + logo küçültme + ana sayfada `main.dart.js` prefetch.
+- 24 Kas 2026: `firebase.json`’daki `no-cache` → `public, max-age=0, must-revalidate,
+  s-maxage=31536000`. `no-cache` Firebase CDN’de her isteği MISS yapıyordu; şimdi HIT.
+  Firebase her deploy’da CDN önbelleğini kendisi temizler. Yayında.
+- Kalan yavaşlık Firebase/Fastly (Milano POP) yolunda: `main.dart.js` HTTP/2 ile
+  rastgele 40–60 sn. gstatic / storage.googleapis.com aynı ağda hep <1 sn.
+  Çözüm seçeneği: `main.dart.js`’i Cloud Storage’dan sunmak (Blaze gerekir) ya da
+  deferred import ile bölmek. Kullanıcı şimdilik bırakmayı seçti.
 - Ev fiyatı girilmeden mobil reklam slotu gösterilmiyor (boş ekranda reklam yok).
 - Sticky banner ile Kaydet butonu arasında boşluk (kazara tıklama politikası).
 - Trafik / reklam linkleri: ana sayfa veya rehber; UTM önerilir.
