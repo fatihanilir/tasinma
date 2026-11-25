@@ -12,6 +12,7 @@ import '../widgets/payment_card.dart';
 import '../widgets/cost_breakdown.dart';
 import '../widgets/text_input.dart';
 import '../widgets/interest_rate_input.dart';
+import '../widgets/keyboard_dismiss_bar.dart';
 
 class CalculatorScreen extends StatefulWidget {
   final VoidCallback onSave;
@@ -85,6 +86,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         final sticky = auth.showStickyCalculatorAd && home.hasValidInput;
         final fixed = auth.showFixedCalculatorAd && home.hasValidInput;
         final warningMessage = _getWarningMessage(home.price, home.loanAmount);
+        // Klavye açıkken alt çubuk gizlenir; yazılan alana yer kalsın.
+        final keyboardOpen = KeyboardDismissBar.isKeyboardOpen(context);
 
         return Column(
           children: [
@@ -92,6 +95,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               child: SingleChildScrollView(
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
                 child: Column(
                   children: [
@@ -221,71 +226,80 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
             // Misafir sticky: her zaman Kaydet üstünde takip / park sonrası sabit
             if (sticky)
-              Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEFE6D8),
-                  border: Border(
-                    top: BorderSide(color: AppColors.line, width: 1),
+              Visibility(
+                visible: !keyboardOpen,
+                maintainState: true,
+                child: Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFEFE6D8),
+                    border: Border(
+                      top: BorderSide(color: AppColors.line, width: 1),
+                    ),
                   ),
-                ),
-                // Kaydet butonuna yakın reklam kazara tıklamaya yol açar (AdMob politikası).
-                padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
-                child: const AdBannerPlaceholder(
-                  label: 'Hesap · sticky',
-                  unit: AdUnit.display,
-                  compact: true,
+                  // Kaydet butonuna yakın reklam kazara tıklamaya yol açar (AdMob politikası).
+                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
+                  child: const AdBannerPlaceholder(
+                    label: 'Hesap · sticky',
+                    unit: AdUnit.display,
+                    compact: true,
+                  ),
                 ),
               ),
 
-            Container(
-              padding: EdgeInsets.fromLTRB(
-                18,
-                12,
-                18,
-                12 + MediaQuery.of(context).padding.bottom,
-              ),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFE6D8),
-                border: Border(
-                  top: BorderSide(
-                    color: sticky ? Colors.transparent : AppColors.line,
-                    width: 1,
+            if (!keyboardOpen)
+              Container(
+                padding: EdgeInsets.fromLTRB(
+                  18,
+                  12,
+                  18,
+                  12 + MediaQuery.of(context).padding.bottom,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFE6D8),
+                  border: Border(
+                    top: BorderSide(
+                      color: sticky ? Colors.transparent : AppColors.line,
+                      width: 1,
+                    ),
                   ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: widget.onNew,
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(
-                            color: AppColors.forest, width: 1.5),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text('Yeni ev'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: widget.onSave,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: widget.onNew,
+                        style: OutlinedButton.styleFrom(
                           side: const BorderSide(
-                              color: AppColors.forest, width: 1.5),
+                            color: AppColors.forest,
+                            width: 1.5,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
+                        child: const Text('Yeni ev'),
                       ),
-                      child: const Text('Kaydet'),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton(
+                        onPressed: widget.onSave,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: const BorderSide(
+                              color: AppColors.forest,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                        child: const Text('Kaydet'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
           ],
         );
       },

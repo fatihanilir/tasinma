@@ -172,9 +172,32 @@ Kaynak `firebase_app_check`; mobilde etkinleştirilmiyor. Ret değil, testi durd
 
 ## App Store / Xcode
 
-- Apple Developer alındı. Xcode cuma sonrası kurulacak (Mac şart).
-- iOS: Apple ile giriş butonu (yalnızca iOS), entitlements, AdMob App ID Info.plist’te hazır.
-- Bundle: `com.cebindeneve.app`
+- Apple Developer alındı. Xcode **26.6** bu Mac’te kurulu (`/Applications/Xcode.app`).
+- Bundle: `com.cebindeneve.app` (Android ile aynı).
+- iOS kod: Apple ile giriş butonu (yalnızca iOS), `Runner.entitlements` (Sign In with Apple),
+  AdMob App ID `Info.plist`’te hazır. `DEVELOPMENT_TEAM` henüz boş — Xcode’da Team seçilecek.
+- **Biten (25 Kas 2026):** Firebase Authentication → Apple açık (Service ID boş = native iOS için
+  normal; web Apple girişi yoksa gerekmez). developer.apple.com → App ID `com.cebindeneve.app`,
+  Sign In with Apple, Primary App ID. App Store Connect’te uygulama: **Cebinden Eve**.
+- **Eksik:** `ios/Runner/GoogleService-Info.plist` repoda yok — Firebase Console → Project
+  settings → iOS app → Download; `ios/Runner/` altına koy.
+- **Biten:** Xcode hesabı `fatihanilir@icloud.com`. Team **FATIH ANILIR** (ID `A7GD3M5C8D`, Individual, Admin). **MESUT KUZU** seçilmeyecek. Bundle `com.cebindeneve.app`. Sign In with Apple capability duruyor. Hedef: Any iOS Device.
+- **Biten (25 Kas 12:27):** iPhone bir kez takıldı, development profili oluştu. Signing Certificate: Apple Development FATIH ANILIR (`2B8KLP38FW`). Kırmızı cihaz hatası gitti. Telefonun bağlı kalması gerekmez.
+- **Archive iptali (25 Kas 12:28):** Saniyede düşüyordu. Sebep: bu Mac’te Flutter 3.41.7 / Dart 3.11.5, proje Dart ^3.12.2 istiyor. `ios/Flutter/Generated.xcconfig` ve `FlutterGeneratedPluginSwiftPackage` yoktu; Xcode bunu Build Canceled yazdı.
+- **Düzeltildi:** Flutter **3.50.1** (Dart 3.14.0). `flutter pub get` ile iOS dosyaları üretildi.
+- **Yüklendi (25 Kas 14:00):** Xcode Organizer’da Runner 1.0.0 (1), `com.cebindeneve.app`, Team FATIH ANILIR. Durum: **Uploaded with warnings**. Uyarılar ret değil (iOS 26.5 SDK notu, Nisan 2027’ye kadar; Firebase/Google dSYM eksikleri).
+- **İşlendi (25 Kas 14:10):** TestFlight’ta 1.0.0 (1) upload **Complete**, sürüm durumu **Ready to Submit**. Sarı nokta hata değil. 90 gün içinde incelemeye eklenmezse build düşer.
+- **Mağaza sayfası (25 Kas, kaydedildi):** Türkçe tanıtım, açıklama, anahtar kelimeler, destek ve pazarlama URL’si, telif `2026 Fatih Anılır`. Kategori Finance, alt başlık “Evin gerçek maliyeti”. Fiyat $0. Çin ana karası hariç 174 ülke. Gizlilik URL `https://cebindeneve.com/gizlilik`. iPhone ekran görüntüleri 1206×2622. Build 1 sürüm sekmesinde.
+- **Gizlilik yayınlandı (25 Kas):** 8 veri türünün amacı dolduruldu ve Publish edildi. E-posta, diğer finansal bilgi, müşteri desteği, kullanıcı kimliği, ürün etkileşimi: kimliğe bağlı, izleme yok. Kaba konum ve cihaz kimliği: analitik + üçüncü taraf reklam, izleme var. Reklam verisi: üçüncü taraf reklam, izleme var.
+- **Yaş sınırı kaydedildi:** 4+. Reklam var; kısıtlamasız web, kullanıcı içeriği, sosyal, mesajlaşma, kumar, tıbbi içerik yok. “Not Applicable” (çocuklara özel değil, yükseltilmedi).
+- **Content Rights kaydedildi:** “No, this app does not contain, show, or access third-party content.”
+- **İnceleme bilgisi kaydedildi:** telefon `+905377356183`, ad fatih, soyad anılır, e-posta `info@cebindeneve.com`. Sign-in required kapalı (kullanıcı adı/şifre yok). Not: hesaplama giriş gerektirmez, Google/Apple yalnızca kaydetmek için, ücretsiz ve reklamlı. Yayın: **Manually release this version** (onaydan sonra kendiliğinden yayına girmez).
+- **iPad görselleri (25 Kas):** 13 inç slotuna 5 adet 2064×2752 yüklendi (giriş, hesap, faiz, taksit, kırılım). iPhone dosyaları bu slota konmadı.
+- **İncelemeye gönderildi (25 Kas 17:17):** Draft Submission → Submit for Review. Sonuç: **1 Item Submitted**, iOS App 1.0 / 1.0.0 (1). Apple en fazla 48 saat diyor; bitince e-posta gelir. Onaydan sonra elle yayınlanacak. Çin ana karası uyum formları doldurulmadı (uygulama orada satılmıyor). Xcode’da yeniden yükleme yok.
+- **TestFlight iç grup (25 Kas 17:35):** Grup adı Fatih. `fatihanilir@icloud.com` (Fatih ANILIR) eklendi, durum Invited. Build 1 grupta. Beta incelemesi yok; telefonda TestFlight uygulaması aynı Apple ID ile açılınca kurulur.
+- **Klavye düzeltmesi → 1.0.0 (2) (25 Kas):** Mobilde Scaffold artık klavyeye göre küçülüyor (web'de eskisi gibi küçülmüyor). İlan linki/Başlık gibi alt alanlar klavyenin üstüne kayıyor. Klavye açıkken altta "Klavyeyi kapat" çubuğu çıkıyor, Yeni ev/Kaydet ve sabit reklam gizleniyor, kaydırınca klavye iniyor. Test: `test/keyboard_test.dart`. pubspec `1.0.0+2`.
+  - iOS: Xcode → Archive → yükle (build 2). TestFlight "Fatih" grubuna otomatik düşer. İncelemedeki build 1 için: ya onaylanınca 1.0.0 (2)'yi güncelleme olarak gönder, ya da incelemeden çekip build 2'yi seçip yeniden gönder.
+  - Android: AAB Windows'ta derlenmeli (anahtar `C:\Users\Fatih-ANILIR\cebindeneve-keys\`; bu Mac'te yok). Kapalı test (Alpha) kanalına yeni sürüm olarak yükle. 14 günlük sayaç sıfırlanmaz, test kullanıcıları güncellemeyi Play'den otomatik alır.
 
 ## Ürün kararları (kısa)
 
@@ -198,4 +221,4 @@ Kaynak `firebase_app_check`; mobilde etkinleştirilmiyor. Ret değil, testi durd
 
 ---
 
-*Son güncelleme: 2026-11-25 — Google girişi düzeldi. Kapalı test etkin; Türkiye + Pakistan; MyLocation listesinde 25 e-posta. Fiverr testçi siparişi alındı. Üretim, 12 kişi 14 gün katılmadan kilitli.*
+*Son güncelleme: 2026-11-25 — App Store 1.0 incelemeye gönderildi (manuel yayın). Play kapalı test devam. Klavye düzeltmesi 1.0.0+2 hazır, yüklenmedi.*

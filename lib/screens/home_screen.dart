@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../utils/app_links.dart';
 import '../utils/page_reload.dart';
 import '../widgets/account_sheet.dart';
+import '../widgets/keyboard_dismiss_bar.dart';
 import 'auth_screen.dart';
 import 'calculator_screen.dart';
 import 'saved_homes_screen.dart';
@@ -156,264 +158,278 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // iOS Chrome/Safari klavye açınca Scaffold'u küçültmesin —
+    // Web: iOS Chrome/Safari klavye açınca Scaffold'u küçültmesin —
     // aksi halde Yeni ev/Kaydet yukarı kayıp altta boşluk oluşuyor.
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: SafeArea(
-          bottom: false,
-          // Ortala ve max 560px genişlik (CSS: width: min(560px, 100%); margin: 0 auto;)
-          child: Center(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 560),
-              width: double.infinity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header — aşağı çekince sayfa yenilenir
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onVerticalDragStart: (_) => _onPullStart(),
-                    onVerticalDragUpdate: (d) => _onPullUpdate(d.delta.dy),
-                    onVerticalDragEnd: (_) => _onPullEnd(),
-                    onVerticalDragCancel: _onPullEnd,
-                    child: Column(
-                      children: [
-                        AnimatedContainer(
-                          duration: _pulling
-                              ? Duration.zero
-                              : const Duration(milliseconds: 220),
-                          curve: Curves.easeOut,
-                          height: _refreshing ? 48 : _pull,
-                          alignment: Alignment.center,
-                          child: (_pull > 8 || _refreshing)
-                              ? SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    color: AppColors.forest,
-                                    backgroundColor: AppColors.forest
-                                        .withOpacity(0.1),
-                                    value: _refreshing
-                                        ? null
-                                        : (_pull / _pullThreshold).clamp(
-                                            0.0,
-                                            1.0,
-                                          ),
-                                  ),
-                                )
-                              : null,
-                        ),
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            18,
-                            4,
-                            18,
-                            _compact ? 10 : 18,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Logo ve başlık
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  // Logo → cebindeneve.com ana sayfası
-                                  MouseRegion(
-                                    cursor: SystemMouseCursors.click,
-                                    child: GestureDetector(
-                                      onTap: AppLinks.openSite,
-                                      child: Container(
-                                        width: 44,
-                                        height: 44,
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: AppColors.forest
-                                                  .withOpacity(0.15),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
+    // Mobil uygulamada küçülmeli; yoksa alttaki alanlar klavyenin altında kalır.
+    return KeyboardVisibility(
+      isOpen: KeyboardVisibility.openFrom(context),
+      child: Scaffold(
+        resizeToAvoidBottomInset: !kIsWeb,
+        body: Container(
+          decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+          child: SafeArea(
+            bottom: false,
+            // Ortala ve max 560px genişlik (CSS: width: min(560px, 100%); margin: 0 auto;)
+            child: Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 560),
+                width: double.infinity,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header — aşağı çekince sayfa yenilenir
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onVerticalDragStart: (_) => _onPullStart(),
+                      onVerticalDragUpdate: (d) => _onPullUpdate(d.delta.dy),
+                      onVerticalDragEnd: (_) => _onPullEnd(),
+                      onVerticalDragCancel: _onPullEnd,
+                      child: Column(
+                        children: [
+                          AnimatedContainer(
+                            duration: _pulling
+                                ? Duration.zero
+                                : const Duration(milliseconds: 220),
+                            curve: Curves.easeOut,
+                            height: _refreshing ? 48 : _pull,
+                            alignment: Alignment.center,
+                            child: (_pull > 8 || _refreshing)
+                                ? SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: AppColors.forest,
+                                      backgroundColor: AppColors.forest
+                                          .withOpacity(0.1),
+                                      value: _refreshing
+                                          ? null
+                                          : (_pull / _pullThreshold).clamp(
+                                              0.0,
+                                              1.0,
                                             ),
-                                          ],
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          child: Image.asset(
-                                            'assets/logo.png',
-                                            fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              18,
+                              4,
+                              18,
+                              _compact ? 10 : 18,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Logo ve başlık
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    // Logo → cebindeneve.com ana sayfası
+                                    MouseRegion(
+                                      cursor: SystemMouseCursors.click,
+                                      child: GestureDetector(
+                                        onTap: AppLinks.openSite,
+                                        child: Container(
+                                          width: 44,
+                                          height: 44,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: AppColors.forest
+                                                    .withOpacity(0.15),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            child: Image.asset(
+                                              'assets/logo.png',
+                                              fit: BoxFit.cover,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  // Başlık ve alt yazı
-                                  Expanded(
-                                    child: Consumer<HomesProvider>(
-                                      builder: (context, provider, _) {
-                                        final title = _currentTab == 1
-                                            ? 'Kayıtlı Evler'
-                                            : (provider
+                                    const SizedBox(width: 12),
+                                    // Başlık ve alt yazı
+                                    Expanded(
+                                      child: Consumer<HomesProvider>(
+                                        builder: (context, provider, _) {
+                                          final title = _currentTab == 1
+                                              ? 'Kayıtlı Evler'
+                                              : (provider
+                                                        .tempHome
+                                                        .title
+                                                        .isNotEmpty
+                                                    ? provider.tempHome.title
+                                                    : 'Cebinden Eve');
+                                          return Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                title,
+                                                style: GoogleFonts.fraunces(
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.w600,
+                                                  letterSpacing: -0.02 * 24,
+                                                  color: AppColors.forest,
+                                                ),
+                                              ),
+                                              if (_currentTab == 0 &&
+                                                  provider
                                                       .tempHome
                                                       .title
-                                                      .isNotEmpty
-                                                  ? provider.tempHome.title
-                                                  : 'Cebinden Eve');
-                                        return Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                                      .isEmpty)
+                                                Text(
+                                                  'Ev maliyet hesaplayıcı',
+                                                  style: GoogleFonts.outfit(
+                                                    fontSize: 12,
+                                                    color: AppColors.muted,
+                                                  ),
+                                                ),
+                                            ],
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    Consumer<AuthProvider>(
+                                      builder: (context, auth, _) {
+                                        return Row(
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Text(
-                                              title,
-                                              style: GoogleFonts.fraunces(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.w600,
-                                                letterSpacing: -0.02 * 24,
+                                            if (!auth.isAuthenticated)
+                                              GestureDetector(
+                                                onTap: () {
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          const AuthScreen(),
+                                                      fullscreenDialog: true,
+                                                    ),
+                                                  );
+                                                },
+                                                child: Text(
+                                                  'Giriş',
+                                                  style: GoogleFonts.outfit(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: AppColors.forest,
+                                                  ),
+                                                ),
+                                              ),
+                                            IconButton(
+                                              tooltip: 'Menü',
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              onPressed: () =>
+                                                  showAccountSheet(context),
+                                              icon: Icon(
+                                                auth.isAuthenticated
+                                                    ? Icons
+                                                          .account_circle_outlined
+                                                    : Icons.menu_rounded,
+                                                size: 24,
                                                 color: AppColors.forest,
                                               ),
                                             ),
-                                            if (_currentTab == 0 &&
-                                                provider.tempHome.title.isEmpty)
-                                              Text(
-                                                'Ev maliyet hesaplayıcı',
-                                                style: GoogleFonts.outfit(
-                                                  fontSize: 12,
-                                                  color: AppColors.muted,
-                                                ),
-                                              ),
                                           ],
                                         );
                                       },
                                     ),
-                                  ),
-                                  Consumer<AuthProvider>(
-                                    builder: (context, auth, _) {
-                                      return Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          if (!auth.isAuthenticated)
-                                            GestureDetector(
-                                              onTap: () {
-                                                Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        const AuthScreen(),
-                                                    fullscreenDialog: true,
-                                                  ),
-                                                );
-                                              },
-                                              child: Text(
-                                                'Giriş',
-                                                style: GoogleFonts.outfit(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: AppColors.forest,
-                                                ),
-                                              ),
-                                            ),
-                                          IconButton(
-                                            tooltip: 'Menü',
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                            onPressed: () =>
-                                                showAccountSheet(context),
-                                            icon: Icon(
-                                              auth.isAuthenticated
-                                                  ? Icons
-                                                        .account_circle_outlined
-                                                  : Icons.menu_rounded,
-                                              size: 24,
-                                              color: AppColors.forest,
-                                            ),
+                                  ],
+                                ),
+                                AnimatedSize(
+                                  duration: const Duration(milliseconds: 200),
+                                  curve: Curves.easeOut,
+                                  alignment: Alignment.topLeft,
+                                  child: (_pageLead == null || _compact)
+                                      ? const SizedBox(width: double.infinity)
+                                      : Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 4,
                                           ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                              AnimatedSize(
-                                duration: const Duration(milliseconds: 200),
-                                curve: Curves.easeOut,
-                                alignment: Alignment.topLeft,
-                                child: (_pageLead == null || _compact)
-                                    ? const SizedBox(width: double.infinity)
-                                    : Padding(
-                                        padding: const EdgeInsets.only(top: 4),
-                                        child: Text(
-                                          _pageLead!,
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 15,
-                                            color: AppColors.muted,
-                                            height: 1.5,
+                                          child: Text(
+                                            _pageLead!,
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 15,
+                                              color: AppColors.muted,
+                                              height: 1.5,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Tabs
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: EdgeInsets.all(_compact ? 4 : 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.goldSoft,
-                        borderRadius: BorderRadius.circular(_compact ? 13 : 16),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _TabButton(
-                              label: 'Hesap',
-                              isSelected: _currentTab == 0,
-                              compact: _compact,
-                              onTap: () => _selectTab(0),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _TabButton(
-                              label: 'Kayıtlı evler',
-                              isSelected: _currentTab == 1,
-                              compact: _compact,
-                              onTap: () => _selectTab(1),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    height: _compact ? 10 : 16,
-                  ),
 
-                  // Content
-                  Expanded(
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: _onScroll,
-                      child: _currentTab == 0
-                          ? CalculatorScreen(onSave: _onSave, onNew: _onNew)
-                          : SavedHomesScreen(
-                              onAddNew: _onAddFromList,
-                              onEditHome: _onEditHome,
+                    // Tabs
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: EdgeInsets.all(_compact ? 4 : 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.goldSoft,
+                          borderRadius: BorderRadius.circular(
+                            _compact ? 13 : 16,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _TabButton(
+                                label: 'Hesap',
+                                isSelected: _currentTab == 0,
+                                compact: _compact,
+                                onTap: () => _selectTab(0),
+                              ),
                             ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _TabButton(
+                                label: 'Kayıtlı evler',
+                                isSelected: _currentTab == 1,
+                                compact: _compact,
+                                onTap: () => _selectTab(1),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      height: _compact ? 10 : 16,
+                    ),
+
+                    // Content
+                    Expanded(
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: _onScroll,
+                        child: _currentTab == 0
+                            ? CalculatorScreen(onSave: _onSave, onNew: _onNew)
+                            : SavedHomesScreen(
+                                onAddNew: _onAddFromList,
+                                onEditHome: _onEditHome,
+                              ),
+                      ),
+                    ),
+                    const KeyboardDismissBar(),
+                  ],
+                ),
               ),
             ),
           ),
