@@ -115,11 +115,20 @@ gizlilik `https://cebindeneve.com/gizlilik`, hesap silme `https://cebindeneve.co
 Mağaza ayarı: kategori Finans, e-posta `info@cebindeneve.com`, site `https://cebindeneve.com`,
 telefon boş. Mağaza girişi kaydedildi. Yapay zeka beyanı: öğeleri etiketleme.
 
-Kapalı test (Alpha) sürümü `1.0.0 (1)` incelemeye gönderildi ve yayınlandı.
-Ülke yalnız Türkiye. Test listesine şimdilik yalnızca hesap sahibi eklendi;
-kendisi katıldı (1 kayıtlı testçi). Herkese açık
-`https://play.google.com/store/apps/details?id=com.cebindeneve.app` açılmaz.
-Katılım bağlantısı Play Console → Kapalı test → test kullanıcıları içindedir.
+Kapalı test (Alpha) sürümü `1.0.0 (1)` yayında. Kanal **Etkin**.
+Ülkeler: Türkiye ve Pakistan, ikisi de **Hedeflenen**. Yeni sürüm oluşturma.
+Test listesi **MyLocation**, 25 e-posta (25 Kas 2026). Listeye yazmak katılım
+sayılmaz. Sayaç, bağlantıyı açıp katılan kişi 12 olunca başlar.
+Herkese açık mağaza adresi açılmaz. Katılım bağlantısı:
+`https://play.google.com/apps/testing/com.cebindeneve.app`
+
+Fiverr: Touseef Ijaz, 14 gün / testçi siparişi satın alındı. Satıcıya Play
+Console erişimi verilmez. Yalnızca bu bağlantı ve listedeki Gmail’ler.
+Testçiler bağlantıyı aynı Gmail ile açıp katılacak, kuracak, uygulamayı bir kez
+açacak ve 14 gün çıkmayacak.
+
+Play paket ekranındaki DEX optimizasyonu %26 ve 16 KB notu ret değildir.
+SafetyNet bildirimi de ret değildir (`firebase_app_check`, mobilde kapalı).
 
 Üretim kilitli. **Üretime başvur** gri kalır. Şart: en az 12 kişi aynı anda
 kayıtlı kalsın, sonra 14 gün. E-posta listesine yazmak yetmez; bağlantıdan katılmak sayılır.
@@ -143,7 +152,7 @@ Anahtar klasörü bu makineye kopyalandı:
 `C:\Users\Fatih-ANILIR\cebindeneve-keys\` (`upload-keystore.jks`, `key.properties`).
 `key.properties` içindeki `storeFile` Windows yoluna çevrildi. Şifreler dosyada;
 buraya yazma. Mac’teki asıl kopya `~/cebindeneve-keys/` duruyor olmalı.
-`firebase login` bu Windows makinede hâlâ yapılmadı.
+`firebase login` bu Windows makinede yapıldı (`ffatihanilir@gmail.com`).
 
 ## Google ile giriş — çözüldü (24 Kas 2026)
 
@@ -154,8 +163,9 @@ imzası Firebase’e eklenen parmak izleriyle uyuşmuyordu. Yukarıdaki
 Uygulamadaki hata metni bütün istisnaları yutuyor (`lib/providers/auth_provider.dart`
 → `_friendlyError`); gerçek kod için `adb logcat`.
 
-Sıradaki: katılım bağlantısını 11 kişiye daha gönder. 12 kayıt dolunca
-14 gün sayacı başlar. Ondan önce üretime başvurma.
+Sıradaki: Fiverr testçilerinin katılımını bekle. Kontrol panelinde kayıtlı
+testçi 12 olunca 14 gün sayacı başlar. Ondan önce üretime başvurma.
+**Yeni sürüm oluştur**ma.
 
 Play bildirimi (23 Kas): `play-services-safetynet:18.0.0` kullanımdan kalkıyor.
 Kaynak `firebase_app_check`; mobilde etkinleştirilmiyor. Ret değil, testi durdurmaz.
@@ -188,4 +198,4 @@ Kaynak `firebase_app_check`; mobilde etkinleştirilmiyor. Ret değil, testi durd
 
 ---
 
-*Son güncelleme: 2026-11-24 — Kapalı test yayında, 1 testçi. Google ile giriş Play sürümünde hâlâ kırık. Play Klasik anahtar SHA-256 kopyalandı, Firebase’e yarın eklenecek.*
+*Son güncelleme: 2026-11-25 — Google girişi düzeldi. Kapalı test etkin; Türkiye + Pakistan; MyLocation listesinde 25 e-posta. Fiverr testçi siparişi alındı. Üretim, 12 kişi 14 gün katılmadan kilitli.*
