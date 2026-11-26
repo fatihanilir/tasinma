@@ -6,6 +6,18 @@ Yeni bilgisayarda: `git checkout cursor/ev-alim-hesaplayici` → Cursor’a
 
 **Şifre / anahtar dosyası yok.** İmza anahtarı GitHub’da değildir.
 
+## Son durum (26 Kas 2026, Windows’a geçiş)
+
+Dal `cursor/ev-alim-hesaplayici`, sürüm `pubspec.yaml` `1.0.0+2`. Klavye düzeltmesi bu sürümde: mobilde sayfa klavyeye göre küçülür, altta “Klavyeyi kapat” çıkar. Kod commit’lendi (`69a967c`).
+
+- **Play kapalı test:** 1.0.0 (2) aynı kapalı test kanalında yayınlandı (25 Kas akşam). “Sürümü yükselt” denmedi; o, üretime taşır. 14 günlük sayaç bu yüzden sıfırlanmaz. Fiverr’daki kişiye güncellemeyi Play’den alması, gruptan çıkmaması söylendi. Üretime hâlâ başvurulmayacak; 12 testçi 14 gün dolmadan kilitli.
+- **AAB bu Mac’te derlendi** (JDK ve Android SDK yoktu, kuruldu). İmzalı dosya: `~/Downloads/cebindeneve-1.0.0-2.aab`. Sertifika upload anahtarı (SHA-256 `A7:95:B6…`). Windows’ta yeniden derlemeye gerek yok; Play’e yüklendi. Flutter 3.50.1 Gradle 9.3.1 istiyor, projede 9.1.0 var. Bu Mac’te `flutter build appbundle --release --android-skip-build-dependency-validation` ile geçildi. Wrapper yükseltimedi.
+- **Anahtarlar:** Windows kopyası `C:\Users\Fatih-ANILIR\cebindeneve-keys\` (storeFile Windows yolu). Mac kopyası `/Users/melisa/cebindeneve-keys/` (storeFile Mac yolu). İkisini birbirinin üstüne kopyalama. Şifreler dosyada; buraya yazılmadı.
+- **App Store incelemesi** hâlâ **1.0.0 (1)**, manuel yayın. Build 2 mağaza sürümünün yerine konmadı. Onaylanırsa ilk kullanıcılar klavye hatasını görür. İstenirse incelemeden çekilip 1.0.0 (2) yeniden gönderilir; sıra başa döner.
+- **TestFlight 1.0.0 (2)** yüklendi (25 Kas ~19:45). Organizer: “Upload completed with warnings”. Ret değil: iOS 26.5 SDK notu (Nisan 2027) ve FirebaseAnalytics / FirebaseFirestoreInternal dSYM eksikleri. 18:30 arşivi yanlışlıkla build 1’di (`Generated.xcconfig` eskiydi); yüklenen 19:13 arşivi build 2.
+- **Dış grup “my friend”:** 1.0.0 (2) **Waiting for Review** (25 Kas 23:02). Beta incelemesi bitmeden davet maili, kod ve public link çalışmaz. Individual Testers de dış testtir, beklemeyi kısaltmaz.
+- **İç test, 3 arkadaş:** Users and Access → People, rol **Marketing**, yalnızca Cebinden Eve, **Create Apps işaretli değil**. Davet mailleri gitti. Kabul edip Active olunca: TestFlight → Fatih → Testers **+** → listeden seç. Builds’te 1.0.0 (2) yoksa oraya da ekle. Ondan sonra TestFlight maili gider. İlk mail yalnızca App Store Connect davetidir; siteyi kurcalamadan kabul edip kapatsınlar.
+
 ---
 
 ## Proje özeti
@@ -151,7 +163,8 @@ Mağaza görselleri `store/play/` içinde:
 Anahtar klasörü bu makineye kopyalandı:
 `C:\Users\Fatih-ANILIR\cebindeneve-keys\` (`upload-keystore.jks`, `key.properties`).
 `key.properties` içindeki `storeFile` Windows yoluna çevrildi. Şifreler dosyada;
-buraya yazma. Mac’teki asıl kopya `~/cebindeneve-keys/` duruyor olmalı.
+buraya yazma. Mac kopyası ayrıca `/Users/melisa/cebindeneve-keys/` (storeFile Mac
+yolu). Windows’ta bu klasörü kullan; Mac dosyasını üstüne yazma.
 `firebase login` bu Windows makinede yapıldı (`ffatihanilir@gmail.com`).
 
 ## Google ile giriş — çözüldü (24 Kas 2026)
@@ -165,7 +178,8 @@ Uygulamadaki hata metni bütün istisnaları yutuyor (`lib/providers/auth_provid
 
 Sıradaki: Fiverr testçilerinin katılımını bekle. Kontrol panelinde kayıtlı
 testçi 12 olunca 14 gün sayacı başlar. Ondan önce üretime başvurma.
-**Yeni sürüm oluştur**ma.
+Aynı kapalı test kanalına yeni sürüm yüklemek sayacı sıfırlamaz; 1.0.0 (2)
+böyle yayınlandı. “Sürümü yükselt” üretime taşır, ona basma.
 
 Play bildirimi (23 Kas): `play-services-safetynet:18.0.0` kullanımdan kalkıyor.
 Kaynak `firebase_app_check`; mobilde etkinleştirilmiyor. Ret değil, testi durdurmaz.
@@ -195,9 +209,9 @@ Kaynak `firebase_app_check`; mobilde etkinleştirilmiyor. Ret değil, testi durd
 - **iPad görselleri (25 Kas):** 13 inç slotuna 5 adet 2064×2752 yüklendi (giriş, hesap, faiz, taksit, kırılım). iPhone dosyaları bu slota konmadı.
 - **İncelemeye gönderildi (25 Kas 17:17):** Draft Submission → Submit for Review. Sonuç: **1 Item Submitted**, iOS App 1.0 / 1.0.0 (1). Apple en fazla 48 saat diyor; bitince e-posta gelir. Onaydan sonra elle yayınlanacak. Çin ana karası uyum formları doldurulmadı (uygulama orada satılmıyor). Xcode’da yeniden yükleme yok.
 - **TestFlight iç grup (25 Kas 17:35):** Grup adı Fatih. `fatihanilir@icloud.com` (Fatih ANILIR) eklendi, durum Invited. Build 1 grupta. Beta incelemesi yok; telefonda TestFlight uygulaması aynı Apple ID ile açılınca kurulur.
-- **Klavye düzeltmesi → 1.0.0 (2) (25 Kas):** Mobilde Scaffold artık klavyeye göre küçülüyor (web'de eskisi gibi küçülmüyor). İlan linki/Başlık gibi alt alanlar klavyenin üstüne kayıyor. Klavye açıkken altta "Klavyeyi kapat" çubuğu çıkıyor, Yeni ev/Kaydet ve sabit reklam gizleniyor, kaydırınca klavye iniyor. Test: `test/keyboard_test.dart`. pubspec `1.0.0+2`.
-  - iOS: Xcode → Archive → yükle (build 2). TestFlight "Fatih" grubuna otomatik düşer. İncelemedeki build 1 için: ya onaylanınca 1.0.0 (2)'yi güncelleme olarak gönder, ya da incelemeden çekip build 2'yi seçip yeniden gönder.
-  - Android: AAB Windows'ta derlenmeli (anahtar `C:\Users\Fatih-ANILIR\cebindeneve-keys\`; bu Mac'te yok). Kapalı test (Alpha) kanalına yeni sürüm olarak yükle. 14 günlük sayaç sıfırlanmaz, test kullanıcıları güncellemeyi Play'den otomatik alır.
+- **Klavye düzeltmesi 1.0.0 (2) (25 Kas):** Mobilde Scaffold klavyeye göre küçülüyor (web’de küçülmüyor). İlan linki ve Başlık klavyenin üstüne kayıyor. “Klavyeyi kapat” çubuğu, kaydırınca kapanma; klavye açıkken Yeni ev/Kaydet ve sabit reklam gizli. Test: `test/keyboard_test.dart`.
+- **iOS build 2 TestFlight’ta (25 Kas ~19:45).** Mağaza incelemesindeki 1.0.0 (1) duruyor. Ayrıntı yukarıda, “Son durum”.
+- **Android 1.0.0 (2) kapalı testte yayınlandı.** AAB bu Mac’te derlendi; Windows anahtarı yerinde. Ayrıntı yukarıda.
 
 ## Ürün kararları (kısa)
 
@@ -221,4 +235,4 @@ Kaynak `firebase_app_check`; mobilde etkinleştirilmiyor. Ret değil, testi durd
 
 ---
 
-*Son güncelleme: 2026-11-25 — App Store 1.0 incelemeye gönderildi (manuel yayın). Play kapalı test devam. Klavye düzeltmesi 1.0.0+2 hazır, yüklenmedi.*
+*Son güncelleme: 2026-11-26 — Play kapalı test 1.0.0 (2) yayında. TestFlight 1.0.0 (2) yüklü; dış grup incelemede, 3 arkadaş iç teste davetli. App Store incelemesi hâlâ 1.0.0 (1), manuel yayın. Devam Windows’ta.*
